@@ -278,7 +278,7 @@ body{font-family:"Yu Gothic UI","游ゴシック UI","游ゴシック",YuGothic,
 <!-- ═══ FREE TEXT ═══ -->
 <div id="s-free" class="sc">
 <div class="fw">
-  <div class="fw-h2">このページの評価</div>
+  <div class="fw-h2">このページの総合評価</div>
   <div class="fw-card">
     <span class="fw-label">このページについて当てはまるものを選んでください<span class="req">※必須（1つ以上）</span></span>
     <div class="pills" id="free-checks" style="flex-direction:column"></div>
@@ -350,7 +350,7 @@ body{font-family:"Yu Gothic UI","游ゴシック UI","游ゴシック",YuGothic,
 
 <script>
 // ★ここを自分のApps Script URLに変更してください
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxYbLzboLQrLXgttn_9hL-niu0VJ-ptcdhBInpM8xCXNl-SC9KEktyEV52Xpg6QLlCf/exec';
+const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
 
 // 制限時間なし
 
@@ -410,9 +410,9 @@ const TASKS = [
    tutorial:'7:00以降の便を確認し、価格が最も安い便をクリックしてください。\nクラス選択画面で「Plus」を選び、オプション画面を経て確認画面まで進んでください。\n⚠️「この内容で予約する」ボタンは押さないでください。確認画面に到達した時点で自動完了します。'},
   {id:'task5', type:'navigate',
    title:'タスク 5 / 5',
-   instruction:'まず任意の便で「Starter」クラスを選択し確認画面まで進んでください。\n次に「Plus」クラスに変更して、もう一度確認画面まで進んでください。',
-   short:'任意の便を選び、Starter→確認画面 → Plus に変更して再度確認画面まで進んでください',
-   tutorial:'1回目：好きな便でStarterクラスを選んで確認画面まで進んでください。\n⚠️「この内容で予約する」は押さないでください。\n2回目：「← 変更する」ボタンで戻り、Plusクラスを選んで再度確認画面まで進んでください。\n2回目の確認画面到達で自動完了します。'},
+   instruction:'価格が 2番目に高い便 を選び、「Starter」クラスで確認画面まで進んでください。\n次に「Plus」クラスに変更して、もう一度確認画面まで進んでください。',
+   short:'価格2番目に高い便を選び、Starter→確認画面 → Plus に変更して再度確認画面まで進んでください',
+   tutorial:'① 便の一覧で価格が2番目に高い便を探してクリックしてください。\n② 「Starter」クラスを選んで確認画面まで進んでください。\n⚠️「この内容で予約する」は押さないでください。\n③「← 変更する」で戻り、クラス選択で「Plus」に変更して再度確認画面まで進んでください。\n④ 2回目の確認画面到達で自動完了します。'},
 ];
 
 const SUS_ITEMS = [
@@ -427,25 +427,23 @@ const SUS_ITEMS = [
   'このページを使うことに自信を感じた',
   'このページを使い始める前に多くのことを学ぶ必要があった',
 ];
-// ── タスク後の振り返り選択肢（UIごとに別定義）──
+// ── タスク後の振り返り選択肢（両UIとも良い・悪い選択肢を両方表示）──
 const MEMO_TEMPLATES_GOOD = [
-  '情報が視覚的に整理されていて見つけやすかった',
-  'ボタンや選択肢の場所が直感的だった',
-  '操作の手順が明確で迷わなかった',
-  '選択した内容がすぐに確認できた',
-  '文字やボタンが大きく見やすかった',
-  '特に問題はなかった',
-];
-const MEMO_TEMPLATES_BAD = [
-  '視線を向ける先が多く、どこを見ればよいか分からなかった',
-  '情報が密集していて読み取るのに時間がかかった',
-  '重要な情報と補足情報の区別がつかなかった',
-  'どのボタンを押せばよいか判断しにくかった',
+  '情報が視覚的に整理されていてすぐ見つかった',
+  'ボタンや選択肢の場所が直感的で操作しやすかった',
+  '操作の流れが明確で迷わず進められた',
+  '前の画面への戻り方が分かりやすかった',
+  '選択状態が視覚的にはっきり確認できた',
+  '全体的に整ったデザインで使いやすかった',
+  '視線が散漫になり、必要な情報を探すのに時間がかかった',
+  '情報が密集していて何が重要か判断しにくかった',
+  'ナビゲーション項目が多く、どこへ進むべきか迷った',
+  'ボタンとテキストリンクの区別がつきにくかった',
   '前の画面への戻り方が分からなかった',
   '選択した内容が反映されているか確認しにくかった',
-  '文字やボタンが小さく見づらかった',
-  '特に問題はなかった',
+  '全体的にデザインが統一されておらず使いにくかった',
 ];
+const MEMO_TEMPLATES_BAD = MEMO_TEMPLATES_GOOD;
 // ── SUS後の評価選択肢（ポジティブ・ネガティブ両方を常に表示）──
 const FREE_TEMPLATES = [
   '情報が視覚的に整理されていてすぐ見つかった',
@@ -629,8 +627,16 @@ function checkConfirmAuto(){
     setTimeout(showPostTask,700);
 
   } else if(t.id==='task5'){
+    // 正解：空席ありの中で2番目に高い便
+    const available=curFlights().filter(f=>f.seats!=='none').sort((a,b)=>b.price-a.price);
+    const correctFlight=available[1];
+    const flightOk=bk.flight&&bk.flight.id===correctFlight.id;
+
     if(confirmCount===0){
-      // 1回目：Starterクラスであること
+      if(!flightOk){
+        alert(`⚠️ 価格が2番目に高い便を選んでください。\n\n「← 変更する」ボタンから前の画面に戻って便を選び直してください。`);
+        return;
+      }
       if(bk.cls!=='starter'){
         alert('⚠️ 1回目はまず「Starter」クラスで確認画面まで進んでください。\n\n「← 変更する」ボタンから前の画面に戻って修正してください。');
         return;
@@ -638,7 +644,10 @@ function checkConfirmAuto(){
       confirmCount=1;
       flashStep1();
     } else if(confirmCount===1){
-      // 2回目：Plusクラスであること
+      if(!flightOk){
+        alert(`⚠️ 同じ便のまま「Plus」クラスに変更してください。\n\n「← 変更する」で戻り、クラス選択画面で「Plus」を選んでください。`);
+        return;
+      }
       if(bk.cls!=='plus'){
         alert('⚠️ 2回目は「Plus」クラスで確認画面まで進んでください。\n\n「← 変更する」ボタンから前の画面に戻って修正してください。');
         return;
