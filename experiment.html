@@ -172,7 +172,9 @@ body{font-family:"Yu Gothic UI","游ゴシック UI","游ゴシック",YuGothic,
   </div>
   <div class="fw-card">
     <label class="fw-label">年齢</label>
-    <input class="fw-input" id="inp-age" type="number" min="10" max="100" placeholder="例：21">
+    <select id="inp-age" style="width:100%;padding:11px 14px;border:2px solid #ddd;border-radius:8px;font-size:15px;font-family:inherit;margin-top:6px;background:#fff">
+      <option value="">選択してください</option>
+    </select>
   </div>
   <div class="fw-card">
     <span class="fw-label">性別</span>
@@ -352,6 +354,12 @@ body{font-family:"Yu Gothic UI","游ゴシック UI","游ゴシック",YuGothic,
 // ★ここを自分のApps Script URLに変更してください
 const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
 
+// 年齢プルダウンを動的生成
+(function(){
+  const sel=document.getElementById('inp-age');
+  for(let i=0;i<=100;i++){const op=document.createElement('option');op.value=i;op.textContent=i;sel.appendChild(op);}
+})();
+
 // 制限時間なし
 
 // ── 良いUI用フライトデータ（8便）──
@@ -411,7 +419,7 @@ const TASKS = [
   {id:'task5', type:'navigate',
    title:'タスク 5 / 5',
    instruction:'価格が 2番目に高い便 を選び、「Starter」クラスで確認画面まで進んでください。\n次に「Plus」クラスに変更して、もう一度確認画面まで進んでください。',
-   short:'価格2番目に高い便を選び、Starter→確認画面 → Plus に変更して再度確認画面まで進んでください',
+   short:'価格が2番目に高い便を選び、Starter→確認画面 → Plus に変更して再度確認画面まで進んでください',
    tutorial:'① 便の一覧で価格が2番目に高い便を探してクリックしてください。\n② 「Starter」クラスを選んで確認画面まで進んでください。\n⚠️「この内容で予約する」は押さないでください。\n③「← 変更する」で戻り、クラス選択で「Plus」に変更して再度確認画面まで進んでください。\n④ 2回目の確認画面到達で自動完了します。'},
 ];
 
@@ -507,7 +515,7 @@ function startExp(){
   const age=parseInt($('inp-age').value);
   const gender=document.querySelector('input[name=gender]:checked');
   if(!ini){alert('イニシャルを入力してください');return;}
-  if(!age||age<10||age>100){alert('年齢を正しく入力してください');return;}
+  if(!age){alert('年齢を選択してください');return;}
   if(!gender){alert('性別を選択してください');return;}
   const grp=Math.random()<0.5?'A':'B';
   exp.info={initial:ini,age,gender:gender.value,ts_start:new Date().toISOString()};
