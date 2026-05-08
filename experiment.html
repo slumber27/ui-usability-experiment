@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UIユーザビリティ実験</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Yu Gothic UI","游ゴシック UI","游ゴシック",YuGothic,sans-serif;background:#f2f3f7;color:#111;line-height:1.6}
+.sc{display:none;min-height:100vh}.sc.active{display:block}
+.fw{max-width:700px;margin:0 auto;padding:48px 24px}
+.fw-h1{font-size:26px;font-weight:700;margin-bottom:14px}
+.fw-h2{font-size:20px;font-weight:700;margin-bottom:16px}
+.fw-body{font-size:15px;line-height:1.85;color:#444;margin-bottom:20px}
+.fw-card{background:#fff;border-radius:12px;padding:24px;margin-bottom:18px;border:1px solid #e2e2e6}
+.fw-label{font-size:15px;font-weight:700;margin-bottom:10px;display:block}
+.fw-input{width:100%;padding:11px 14px;border:2px solid #ddd;border-radius:8px;font-size:15px;font-family:inherit}
+.fw-input:focus{outline:none;border-color:#1a56db}
+.fw-textarea{width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;min-height:80px;margin-top:8px}
+.fw-textarea:focus{outline:none;border-color:#1a56db}
+.fw-btn{display:block;width:100%;padding:16px;background:#1a56db;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
+.fw-btn:hover{background:#1746b5}
+.fw-btn:disabled{background:#aaa;cursor:not-allowed}
+.fw-btn-ghost{background:#fff;color:#1a56db;border:2px solid #1a56db}
+.fw-btn-ghost:hover{background:#f0f4ff}
+.prog{height:5px;background:#e0e0e8;border-radius:3px;margin-bottom:36px}
+.prog-fill{height:100%;background:#1a56db;border-radius:3px;transition:width .4s}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 16px}
+.pill{display:flex;align-items:center;gap:8px;padding:9px 16px;border:2px solid #ddd;border-radius:8px;cursor:pointer;font-size:14px;background:#fff;transition:all .15s;user-select:none}
+.pill:has(input:checked){border-color:#1a56db;background:#e8f0fe;color:#1746b5;font-weight:600}
+.pill input{accent-color:#1a56db}
+.req{color:#dc2626;font-size:13px;margin-left:6px}
+.sus-item{padding:16px 0;border-bottom:1px solid #eee}
+.sus-item:last-child{border-bottom:none}
+.sus-q{font-size:15px;margin-bottom:11px;line-height:1.6}
+.sus-row{display:flex;align-items:center;gap:8px}
+.sus-cap{font-size:11px;color:#888;min-width:88px;line-height:1.3}
+.sus-cap.r{text-align:right}
+.sus-btns{display:flex;gap:6px;flex:1;justify-content:center}
+.sus-b{width:42px;height:42px;border-radius:50%;border:2px solid #ddd;background:#fff;cursor:pointer;font-size:14px;font-family:inherit;transition:all .15s}
+.sus-b:hover{border-color:#1a56db}.sus-b.on{background:#1a56db;color:#fff;border-color:#1a56db}
+
+/* ── OVERLAY ── */
+#overlay{position:fixed;bottom:0;left:0;right:0;background:rgba(15,35,120,.97);color:#fff;z-index:9999;border-top:2px solid rgba(255,255,255,.15)}
+.ov-top{padding:12px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.ov-left{flex:1;min-width:0}
+.ov-num{font-size:11px;opacity:.65;margin-bottom:3px;letter-spacing:.5px}
+.ov-task{font-size:14px;line-height:1.45;font-weight:500}
+.ov-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.ov-timer{font-size:13px;font-weight:700;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:6px;white-space:nowrap}
+.ov-timer.warn{background:rgba(220,38,38,.6)}
+.ov-back{background:none;border:1px solid rgba(255,255,255,.4);color:rgba(255,255,255,.8);padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.ov-back:hover{background:rgba(255,255,255,.15)}
+.ov-body{padding:10px 20px 16px;border-top:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ov-select{flex:1;min-width:140px;padding:9px 13px;border:none;border-radius:7px;font-size:15px;font-family:inherit;background:#fff;color:#111;cursor:pointer;}
+.ov-select:focus{outline:2px solid #93c5fd}
+.ov-radio-grp{display:flex;gap:10px}
+.ov-radio-lbl{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);padding:8px 14px;border-radius:7px;cursor:pointer;font-size:14px;border:2px solid transparent;transition:all .15s}
+.ov-radio-lbl:has(input:checked){border-color:#93c5fd;background:rgba(147,197,253,.2)}
+.ov-radio-lbl input{accent-color:#fff}
+.ov-submit{padding:9px 20px;background:#fff;color:#1a56db;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.ov-submit:hover{background:#e8f0fe}
+.ov-hint{font-size:13px;opacity:.75;padding:0 20px 14px;display:flex;align-items:center;gap:6px}
+
+/* ━━━ GOOD UI ━━━ */
+.gu{font-family:"Yu Gothic UI","游ゴシック UI","游ゴシック",YuGothic,sans-serif;background:#fff;min-height:100vh;padding-bottom:120px}
+.gu-hdr{height:62px;border-bottom:1px solid #eaeaf0;display:flex;align-items:center;padding:0 32px;gap:14px;position:sticky;top:0;background:#fff;z-index:100}
+.gu-logo{font-size:20px;font-weight:900;letter-spacing:2px}.gu-logo-sub{font-size:13px;color:#888}
+.gu-main{max-width:740px;margin:0 auto;padding:32px 24px}
+.gu-bc{font-size:13px;color:#888;margin-bottom:22px}.gu-bc .done{color:#ccc;text-decoration:line-through}.gu-bc strong{color:#1a56db}
+.gu-search-box{background:#f6f7fb;border-radius:12px;padding:18px 22px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between}
+.gu-route{font-size:20px;font-weight:700}.gu-route-meta{font-size:13px;color:#666;margin-top:4px}
+.gu-sec{font-size:16px;font-weight:700;margin-bottom:14px}
+.gu-acc{border:1px solid #e0e0e8;border-radius:10px;margin-bottom:22px;overflow:hidden}
+.gu-acc-hdr{padding:13px 18px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:#f8f8fc;font-weight:500;user-select:none}
+.gu-acc-hdr:hover{background:#f0f0f8}
+.gu-acc-body{display:none;padding:16px 18px}.gu-acc-body.open{display:block}
+.gu-tbl{width:100%;border-collapse:collapse;font-size:14px}
+.gu-tbl th,.gu-tbl td{padding:8px 12px;border:1px solid #e8e8f0;text-align:center}
+.gu-tbl th{background:#f0f0f8;font-weight:600}.gu-tbl .na{color:#aaa}
+.gu-fl-list{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
+.gu-fl{border:2px solid #e0e0e8;border-radius:12px;padding:18px 22px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:#fff;transition:all .15s}
+.gu-fl:hover{border-color:#1a56db;background:#f5f7ff}
+.gu-fl.none{opacity:.5;cursor:not-allowed;pointer-events:none}
+.gu-fl-times{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.gu-dep,.gu-arr{font-size:26px;font-weight:700}.gu-arrow{color:#aaa;font-size:18px}
+.gu-fl-dur{font-size:12px;color:#888}.gu-fl-code{font-size:12px;color:#999;margin-top:2px}
+.gu-fl-price{font-size:26px;font-weight:700;color:#1a56db;text-align:right}.gu-fl-price-lbl{font-size:12px;color:#888;text-align:right}
+.gu-badge{display:inline-block;font-size:11px;padding:3px 9px;border-radius:20px;margin-top:6px}
+.gu-badge.few{background:#fef3c7;color:#92400e}.gu-badge.ok{background:#d1fae5;color:#065f46}.gu-badge.none{background:#fee2e2;color:#991b1b}
+.gu-cls-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px}
+.gu-cls-card{border:2px solid #e0e0e8;border-radius:12px;padding:18px 14px;cursor:pointer;transition:all .15s;background:#fff}
+.gu-cls-card:hover{border-color:#1a56db;background:#f5f7ff}.gu-cls-card.sel{border-color:#1a56db;background:#e8f0fe}
+.gu-cls-name{font-size:18px;font-weight:700;margin-bottom:10px}
+.gu-cls-price{font-size:22px;font-weight:700;color:#1a56db;margin-bottom:12px}
+.gu-cls-price span{font-size:13px;color:#888;font-weight:400}
+.gu-cls-row{font-size:13px;padding:5px 0;border-bottom:1px solid #f0f0f8;display:flex;justify-content:space-between;gap:4px}
+.gu-cls-row:last-child{border:none}.gu-cls-k{color:#888;white-space:nowrap}.gu-cls-na{color:#aaa}
+.gu-cls-mark{font-size:12px;color:#1a56db;font-weight:700;margin-top:8px;text-align:center}
+.gu-sel-sum{background:#f6f7fb;border-radius:10px;padding:14px 18px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;font-size:14px;flex-wrap:wrap;gap:8px}
+.gu-back-link{background:none;border:none;color:#1a56db;font-size:15px;cursor:pointer;font-family:inherit;text-decoration:underline;white-space:nowrap;padding:4px 0}
+.gu-opt-card{border:1px solid #e0e0e8;border-radius:10px;padding:18px;margin-bottom:14px}
+.gu-opt-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.gu-opt-name{font-size:15px;font-weight:600;margin-bottom:4px}.gu-opt-desc{font-size:13px;color:#666}
+.gu-opt-price{font-size:16px;font-weight:700;color:#1a56db;white-space:nowrap}
+.gu-opt-toggle{display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;white-space:nowrap}
+.gu-opt-toggle input{accent-color:#1a56db;width:16px;height:16px}
+.gu-opt-inc{background:#d1fae5;color:#065f46;border-radius:8px;padding:14px 18px;font-size:14px;font-weight:500}
+.gu-cfm-card{border:2px solid #1a56db;border-radius:12px;padding:24px;margin-bottom:22px;background:#f0f4ff}
+.gu-cfm-title{font-size:18px;font-weight:700;margin-bottom:18px}
+.gu-cfm-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #d8e4f8;font-size:15px;gap:12px}
+.gu-cfm-row:last-child{border:none;padding-top:14px}.gu-cfm-row .lbl{color:#555}.gu-cfm-row .val{font-weight:600;text-align:right}
+.gu-cfm-row.total .val{color:#1a56db;font-size:22px}
+.gu-cfm-btns{display:flex;gap:12px}
+.gu-cfm-back{flex:1;padding:16px;background:#fff;border:2px solid #1a56db;color:#1a56db;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.gu-cfm-back:hover{background:#f0f4ff}
+.gu-cfm-ok{flex:2;padding:14px;background:#1a56db;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.gu-cfm-ok:hover{background:#1746b5}
+.gu-next{width:100%;padding:18px;background:#1a56db;color:#fff;border:none;border-radius:10px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px}
+.gu-next:hover{background:#1746b5}.gu-next:disabled{background:#bbb;cursor:not-allowed}
+.gu-done{text-align:center;padding:80px 24px}
+.gu-done-ico{font-size:60px;margin-bottom:16px}.gu-done-title{font-size:26px;font-weight:700;margin-bottom:8px}.gu-done-sub{color:#555;font-size:15px}
+
+/* ━━━ BAD UI ━━━ */
+.bu{font-family:"MS PGothic","ＭＳ Ｐゴシック",Osaka,sans-serif;background:#fffef5;min-height:100vh;font-size:13px;padding-bottom:120px}
+.bu-hdr{background:linear-gradient(#002f87,#0047c8);color:#fff}
+.bu-hdr-top{padding:8px 16px;font-size:17px;font-weight:700;letter-spacing:1px}
+.bu-nav{background:#eee;border-top:1px solid #bbb;border-bottom:3px solid #0047c8;padding:3px 14px;display:flex;flex-wrap:wrap}
+.bu-nav a{color:#002f87;font-size:11px;text-decoration:none;padding:4px 8px;border-right:1px solid #ccc}
+.bu-nav a:hover{text-decoration:underline;color:#c00}
+.bu-banner{background:#e60000;color:#fff;text-align:center;padding:5px;font-size:12px;font-weight:700}
+.bu-main{padding:12px 16px;max-width:900px}
+.bu-sec-hdr{background:#002f87;color:#fff;padding:4px 10px;font-size:12px;font-weight:700;margin:14px 0 8px}
+.bu-txt{font-size:13px;line-height:1.9;color:#222;padding:4px 2px}
+.bu-note{font-size:11px;color:#666;border-left:2px solid #ccc;padding:4px 8px;margin:6px 0;line-height:1.7}
+.bu-fl-list{border:1px solid #ccc;background:#fff;padding:8px;margin:8px 0}
+.bu-fl-row{padding:6px 8px;border-bottom:1px solid #eee;cursor:pointer;font-size:13px;line-height:1.6;color:#002f87}
+.bu-fl-row:last-child{border-bottom:none}.bu-fl-row:hover{text-decoration:underline}
+.bu-fl-row.sel{background:#fffde0;font-weight:bold;color:#000}
+.bu-fl-row.none-seats{cursor:not-allowed;pointer-events:none}
+.bu-cls-list{border:1px solid #ccc;background:#fff;padding:8px;margin:8px 0}
+.bu-cls-item{padding:8px;border-bottom:1px solid #eee;cursor:pointer;font-size:13px;color:#222;line-height:1.7}
+.bu-cls-item:last-child{border-bottom:none}.bu-cls-item:hover{background:#f8f8f8}.bu-cls-item.bu-sel{background:#fffde0}
+.bu-sub{background:none;border:none;color:#002f87;font-size:12px;text-decoration:underline;cursor:pointer;font-family:inherit;padding:2px}
+.bu-sub:hover{color:#c00}
+.bu-sub-ok{background:#002f87;color:#fff;border:none;padding:5px 20px;font-size:12px;cursor:pointer;font-family:inherit}
+.bu-ftr{border-top:2px solid #002f87;padding:8px 16px;font-size:11px;color:#666;text-align:center;margin-top:24px}
+.bu-ftr a{color:#888;font-size:11px}
+</style>
+</head>
+<body>
+
+<!-- ═══ INTRO ═══ -->
+<div id="s-intro" class="sc active">
+<div class="fw">
+  <div style="text-align:center;margin-bottom:40px">
+    <div style="font-size:11px;letter-spacing:3px;color:#888;margin-bottom:10px">USABILITY STUDY</div>
+    <div class="fw-h1" style="font-size:30px">UIユーザビリティ実験</div>
+    <div class="fw-body" style="max-width:460px;margin:12px auto 0">2種類の航空券予約ページを操作していただき、使いやすさを評価していただきます。</div>
+  </div>
+  <div class="fw-card">
+    <div style="font-size:14px;line-height:2.1;color:#444">
+      ・2つのページでそれぞれ <strong>5つのタスク</strong> を行います<br>
+      ・タスクごとに所要時間を <strong>自動で記録</strong> します<br>
+      ・各ページの操作後に <strong>アンケート</strong> があります<br>
+      ・収集するのは操作データのみです。氏名などの個人情報は収集しません
+    </div>
+  </div>
+  <div class="fw-card">
+    <label class="fw-label">イニシャル（例：TN）</label>
+    <input class="fw-input" id="inp-ini" maxlength="6" placeholder="イニシャルを入力してください">
+  </div>
+  <div class="fw-card">
+    <label class="fw-label">年齢</label>
+    <input class="fw-input" id="inp-age" type="number" min="10" max="100" placeholder="例：21">
+  </div>
+  <div class="fw-card">
+    <span class="fw-label">性別</span>
+    <div class="pills">
+      <label class="pill"><input type="radio" name="gender" value="男性"> 男性</label>
+      <label class="pill"><input type="radio" name="gender" value="女性"> 女性</label>
+    </div>
+  </div>
+  <button class="fw-btn" onclick="startExp()">実験を開始する →</button>
+</div>
+</div>
+
+<!-- ═══ PRE-TASK ═══ -->
+<div id="s-pre" class="sc">
+<div class="fw">
+  <div class="prog"><div class="prog-fill" id="prog"></div></div>
+  <div style="font-size:12px;color:#888;margin-bottom:8px" id="pre-meta"></div>
+  <div class="fw-h2" id="pre-title"></div>
+
+  <div class="fw-card" style="border-left:4px solid #1a56db;background:#f0f4ff;padding-left:20px">
+    <div style="font-size:15px;line-height:1.9;color:#1e3a6e;white-space:pre-line" id="pre-body"></div>
+  </div>
+
+  <div class="fw-card" style="background:#fffbeb;border-color:#fcd34d" id="pre-tutorial"></div>
+
+  <div class="fw-card" style="background:#f8f8fb;border:none">
+    <div style="font-size:13px;color:#555;line-height:1.9">
+      ⏱ 「タスク開始」を押すと計測が始まります<br>
+      <span id="pre-hint-answer" style="display:none;color:#1a56db">📝 タスクを確認後、画面を操作して <strong>下の回答欄に入力・選択</strong> してください</span>
+      <span id="pre-hint-nav" style="display:none;color:#1a56db">🖱 ページを操作して<strong>確認画面まで進んでください。到達すると自動で完了</strong>します</span>
+    </div>
+  </div>
+
+  <button class="fw-btn" onclick="startTask()">▶ タスク開始</button>
+</div>
+</div>
+
+<!-- ═══ UI ACTIVE ═══ -->
+<div id="s-ui" class="sc">
+  <div id="ui-area"></div>
+  <div id="overlay">
+    <div class="ov-top">
+      <div class="ov-left">
+        <div class="ov-num" id="ov-num"></div>
+        <div class="ov-task" id="ov-task"></div>
+      </div>
+      <div class="ov-right">
+        <button class="ov-back" onclick="backToPreTask()">← 説明に戻る</button>
+      </div>
+    </div>
+    <!-- プルダウン選択（タスク1・2用） -->
+    <div class="ov-body" id="ov-ans-select" style="display:none">
+      <select id="ans-select" class="ov-select"></select>
+      <button class="ov-submit" onclick="submitAnswer()">回答する</button>
+    </div>
+    <!-- テキスト入力（予備・現在未使用） -->
+    <div class="ov-body" id="ov-ans-text" style="display:none">
+      <input id="ans-input" class="ov-input" placeholder="">
+      <button class="ov-submit" onclick="submitAnswer()">回答する</button>
+    </div>
+    <!-- 回答選択（タスク3用） -->
+    <div class="ov-body" id="ov-ans-radio" style="display:none">
+      <div class="ov-radio-grp">
+        <label class="ov-radio-lbl"><input type="radio" name="ans-r" value="はい"> はい</label>
+        <label class="ov-radio-lbl"><input type="radio" name="ans-r" value="いいえ"> いいえ</label>
+      </div>
+      <button class="ov-submit" onclick="submitAnswer()">回答する</button>
+    </div>
+    <!-- ナビゲーションヒント（タスク4・5用） -->
+    <div class="ov-hint" id="ov-hint" style="display:none">
+      ▸ 確認画面に到達すると自動で完了します
+    </div>
+  </div>
+</div>
+
+<!-- ═══ POST-TASK ═══ -->
+<div id="s-post" class="sc">
+<div class="fw">
+  <div class="prog"><div class="prog-fill" id="prog2"></div></div>
+  <div class="fw-h2">このタスクの振り返り</div>
+  <div class="fw-card">
+    <span class="fw-label">気になった点を選んでください（複数選択可）<span class="req">※必須</span></span>
+    <div class="pills" id="memo-checks" style="flex-direction:column"></div>
+    <div style="margin-top:6px">
+      <span class="fw-label" style="font-weight:400;font-size:14px">その他・自由記述（任意）</span>
+      <textarea class="fw-textarea" id="memo-free" placeholder="気になったことがあれば自由に書いてください"></textarea>
+    </div>
+  </div>
+  <button class="fw-btn" onclick="submitPost()">次へ →</button>
+</div>
+</div>
+
+<!-- ═══ SUS ═══ -->
+<div id="s-sus" class="sc">
+<div class="fw">
+  <div class="fw-h2">操作したページを評価してください</div>
+  <div class="fw-body">各項目を 1（全くそう思わない）〜 5（非常にそう思う）で評価してください</div>
+  <div class="fw-card" id="sus-body"></div>
+  <button class="fw-btn" onclick="submitSUS()" style="margin-top:4px">次へ →</button>
+</div>
+</div>
+
+<!-- ═══ FREE TEXT ═══ -->
+<div id="s-free" class="sc">
+<div class="fw">
+  <div class="fw-h2">このページの評価</div>
+  <div class="fw-card">
+    <span class="fw-label">このページについて当てはまるものを選んでください<span class="req">※必須（1つ以上）</span></span>
+    <div class="pills" id="free-checks" style="flex-direction:column"></div>
+    <div style="margin-top:8px">
+      <span class="fw-label" style="font-weight:400;font-size:14px">その他・自由記述（任意）</span>
+      <textarea class="fw-textarea" id="free-txt" placeholder="自由に記述してください"></textarea>
+    </div>
+  </div>
+  <button class="fw-btn" onclick="submitFree()">次へ →</button>
+</div>
+</div>
+
+<!-- ═══ TRANSITION ═══ -->
+<div id="s-tr" class="sc">
+<div class="fw" style="text-align:center;padding-top:80px">
+  <div style="font-size:52px;margin-bottom:18px">🔄</div>
+  <div class="fw-h1">次のページに移ります</div>
+  <div class="fw-body">別のデザインの同じ航空券予約サービスを操作していただきます。<br>同じタスクを繰り返しますので、同様に進めてください。</div>
+  <button class="fw-btn" onclick="nextUI()" style="max-width:300px;margin:0 auto">次のページへ進む →</button>
+</div>
+</div>
+
+<!-- ═══ COMPARISON ═══ -->
+<div id="s-comp" class="sc">
+<div class="fw">
+  <div class="fw-h2">総合評価</div>
+  <div class="fw-body">2つのページを比較して回答してください</div>
+  <div class="fw-card">
+    <span class="fw-label">Q1. どちらのページが使いやすかったですか？</span>
+    <div class="pills" style="flex-direction:column;gap:8px">
+      <label class="pill"><input type="radio" name="pref" value="first"> 最初に操作したページ</label>
+      <label class="pill"><input type="radio" name="pref" value="second"> 2番目に操作したページ</label>
+      <label class="pill"><input type="radio" name="pref" value="same"> どちらも同じくらい</label>
+    </div>
+  </div>
+  <div class="fw-card">
+    <span class="fw-label">Q2. その理由を教えてください<span class="req">※必須</span></span>
+    <textarea class="fw-textarea" id="comp-reason" placeholder="例：情報が探しやすかった、ボタンが分かりやすかった、など"></textarea>
+  </div>
+  <button class="fw-btn" onclick="submitComp()">回答を送信する</button>
+</div>
+</div>
+
+<!-- ═══ SENDING ═══ -->
+<div id="s-sending" class="sc">
+<div class="fw" style="text-align:center;padding-top:100px">
+  <div style="font-size:40px;margin-bottom:20px">📡</div>
+  <div class="fw-h2">データを送信しています...</div>
+  <div class="fw-body">しばらくお待ちください</div>
+</div>
+</div>
+
+<!-- ═══ DONE ═══ -->
+<div id="s-done" class="sc">
+<div class="fw" style="text-align:center;padding-top:80px">
+  <div style="font-size:60px;margin-bottom:16px">🎉</div>
+  <div class="fw-h1">実験が完了しました</div>
+  <div class="fw-body">ご協力ありがとうございました。<br>このページは閉じていただいて構いません。</div>
+  <div id="done-err" style="display:none">
+    <div class="fw-card" style="background:#fef2f2;border-color:#fca5a5;text-align:left">
+      <div style="font-weight:700;color:#dc2626;margin-bottom:8px">⚠️ 送信に失敗しました</div>
+      <div style="font-size:13px;color:#7f1d1d;margin-bottom:10px">以下のデータをコピーして研究者に送ってください。</div>
+      <textarea id="fallback-data" class="fw-textarea" style="font-size:11px;min-height:140px;font-family:monospace" readonly></textarea>
+      <button class="fw-btn" onclick="copyFallback()" style="margin-top:10px;background:#dc2626">データをコピーする</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ★ここを自分のApps Script URLに変更してください
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxYbLzboLQrLXgttn_9hL-niu0VJ-ptcdhBInpM8xCXNl-SC9KEktyEV52Xpg6QLlCf/exec';
+
+// 制限時間なし
+
+// ── 良いUI用フライトデータ（8便）──
+const FLIGHTS_GOOD = [
+  {id:'JW101',dep:'06:45',arr:'08:45',price:6200, seats:'ok'},   // 最安
+  {id:'JW103',dep:'08:20',arr:'10:20',price:8800, seats:'ok'},
+  {id:'JW105',dep:'10:15',arr:'12:15',price:7500, seats:'few'},
+  {id:'JW107',dep:'12:40',arr:'14:40',price:9300, seats:'ok'},
+  {id:'JW109',dep:'14:55',arr:'16:55',price:11400,seats:'ok'},   // 10,000円以上
+  {id:'JW111',dep:'16:30',arr:'18:30',price:7100, seats:'none'}, // 空席なし
+  {id:'JW113',dep:'18:45',arr:'20:45',price:13200,seats:'ok'},   // 10,000円以上
+  {id:'JW115',dep:'20:00',arr:'22:00',price:8600, seats:'ok'},
+];
+// ── 悪いUI用フライトデータ（8便・完全に別データ）──
+const FLIGHTS_BAD = [
+  {id:'SK301',dep:'05:50',arr:'07:50',price:6000, seats:'ok'},   // 7:00前・最安
+  {id:'SK303',dep:'09:10',arr:'11:10',price:6500, seats:'ok'},   // 最安
+  {id:'SK305',dep:'11:35',arr:'13:35',price:8200, seats:'few'},
+  {id:'SK307',dep:'13:50',arr:'15:50',price:7800, seats:'ok'},
+  {id:'SK309',dep:'16:20',arr:'18:20',price:12600,seats:'ok'},   // 10,000円以上
+  {id:'SK311',dep:'18:05',arr:'20:05',price:9100, seats:'none'}, // 空席なし
+  {id:'SK313',dep:'19:45',arr:'21:45',price:11400,seats:'ok'},   // 10,000円以上
+  {id:'SK315',dep:'21:20',arr:'23:20',price:8700, seats:'ok'},
+];
+
+const CLASSES = [
+  {id:'starter',name:'Starter',extra:0,   bag:'なし',        seat:'ランダム配置',change:'不可'},
+  {id:'plus',   name:'Plus',   extra:2200, bag:'20kg × 1個', seat:'座席指定可',  change:'不可'},
+  {id:'flex',   name:'Flex',   extra:4400, bag:'20kg × 2個', seat:'座席指定込み',change:'可'},
+];
+
+// ── タスク定義 ──
+const TASKS = [
+  {id:'task1', type:'answer-select',
+   title:'タスク 1 / 5',
+   instruction:'表示されている便の中で、最も価格が安い便の出発時刻を確認してください。',
+   short:'最も価格が安い便の出発時刻を確認してください',
+   tutorial:'便の一覧を確認して、最も安い価格の行を見つけてください。その便の「出発時刻」を下のプルダウンから選んで「回答する」を押してください。'},
+  {id:'task2', type:'answer-select',
+   title:'タスク 2 / 5',
+   instruction:'表示されている便の中で、出発時刻が朝 8:00以降 かつ 価格が10,000円未満 の便が何便あるか確認してください。',
+   short:'朝8:00以降で10,000円未満の便が何便あるか確認してください',
+   tutorial:'出発時刻が8:00以降の便に絞り込み、その中で価格が10,000円未満のものをすべて数えてください。その数を下のプルダウンから選んで「回答する」を押してください。'},
+  {id:'task3', type:'answer-radio',
+   title:'タスク 3 / 5',
+   instruction:'「Starter」クラスに受託手荷物（スーツケースなどを機内に預けること）は含まれますか？',
+   short:'Starterクラスに受託手荷物は含まれますか？',
+   tutorial:'クラスの内容説明を確認してください。「Starter」クラスの受託手荷物の項目を見て、下の「はい」「いいえ」から選んで「回答する」を押してください。',
+   instruction_bad:'「Flex」クラスに受託手荷物（スーツケースなどを機内に預けること）は含まれますか？',
+   short_bad:'Flexクラスに受託手荷物は含まれますか？',
+   tutorial_bad:'クラスの内容説明を確認してください。「Flex」クラスの受託手荷物の項目を見て、下の「はい」「いいえ」から選んで「回答する」を押してください。'},
+  {id:'task4', type:'navigate',
+   title:'タスク 4 / 5',
+   instruction:'出発時刻が 7:00以降 の便の中で最も価格が安い便を選んでください。\n「Plus」クラスを選択して確認画面まで進んでください。',
+   short:'7:00以降で最安の便を選び、Plusクラスで確認画面まで進んでください',
+   tutorial:'7:00以降の便を確認し、価格が最も安い便をクリックしてください。\nクラス選択画面で「Plus」を選び、オプション画面を経て確認画面まで進んでください。\n⚠️「この内容で予約する」ボタンは押さないでください。確認画面に到達した時点で自動完了します。'},
+  {id:'task5', type:'navigate',
+   title:'タスク 5 / 5',
+   instruction:'まず任意の便で「Starter」クラスを選択し確認画面まで進んでください。\n次に「Plus」クラスに変更して、もう一度確認画面まで進んでください。',
+   short:'任意の便を選び、Starter→確認画面 → Plus に変更して再度確認画面まで進んでください',
+   tutorial:'1回目：好きな便でStarterクラスを選んで確認画面まで進んでください。\n⚠️「この内容で予約する」は押さないでください。\n2回目：「← 変更する」ボタンで戻り、Plusクラスを選んで再度確認画面まで進んでください。\n2回目の確認画面到達で自動完了します。'},
+];
+
+const SUS_ITEMS = [
+  'このページをまた使いたいと思う',
+  'このページは必要以上に複雑だと感じた',
+  'このページは使いやすいと感じた',
+  'このページを使うには専門的な知識が必要だと感じた',
+  'このページのさまざまな機能はうまくまとまっていると感じた',
+  'このページには一貫性がないと感じた',
+  'ほとんどの人がこのページをすぐに使えるようになると思う',
+  'このページは使いにくいと感じた',
+  'このページを使うことに自信を感じた',
+  'このページを使い始める前に多くのことを学ぶ必要があった',
+];
+// ── タスク後の振り返り選択肢（UIごとに別定義）──
+const MEMO_TEMPLATES_GOOD = [
+  '情報が視覚的に整理されていて見つけやすかった',
+  'ボタンや選択肢の場所が直感的だった',
+  '操作の手順が明確で迷わなかった',
+  '選択した内容がすぐに確認できた',
+  '文字やボタンが大きく見やすかった',
+  '特に問題はなかった',
+];
+const MEMO_TEMPLATES_BAD = [
+  '視線を向ける先が多く、どこを見ればよいか分からなかった',
+  '情報が密集していて読み取るのに時間がかかった',
+  '重要な情報と補足情報の区別がつかなかった',
+  'どのボタンを押せばよいか判断しにくかった',
+  '前の画面への戻り方が分からなかった',
+  '選択した内容が反映されているか確認しにくかった',
+  '文字やボタンが小さく見づらかった',
+  '特に問題はなかった',
+];
+// ── SUS後の評価選択肢（ポジティブ・ネガティブ両方を常に表示）──
+const FREE_TEMPLATES = [
+  '情報が視覚的に整理されていてすぐ見つかった',
+  'ボタンや選択肢の場所が直感的で操作しやすかった',
+  '操作の流れが明確で迷わず進められた',
+  '前の画面への戻り方が分かりやすかった',
+  '選択状態が視覚的にはっきり確認できた',
+  '全体的に整ったデザインで使いやすかった',
+  '視線が散漫になり、必要な情報を探すのに時間がかかった',
+  '情報が密集していて何が重要か判断しにくかった',
+  'ナビゲーション項目が多く、どこへ進むべきか迷った',
+  'ボタンとテキストリンクの区別がつきにくかった',
+  '前の画面への戻り方が分からなかった',
+  '選択した内容が反映されているか確認しにくかった',
+  '全体的にデザインが統一されておらず使いにくかった',
+];
+
+// ── 状態管理 ──
+let exp = {
+  group:null, uiOrder:[], uiIdx:0, taskIdx:0,
+  startTime:null,
+  info:{initial:'',age:0,gender:'',ts_start:''},
+  result:{
+    good_ui:{tasks:{},sus_raw:[],sus_score:null,free_reason:''},
+    bad_ui: {tasks:{},sus_raw:[],sus_score:null,free_reason:''},
+    comparison:{preferred:'',reason:''}
+  }
+};
+let bk = {screen:'list',flight:null,cls:null,baggage:0};
+let confirmCount = 0;
+
+// ── ヘルパー ──
+const fmt = n => '¥' + n.toLocaleString();
+const $ = id => document.getElementById(id);
+function show(id){document.querySelectorAll('.sc').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');}
+function curKey(){return exp.uiOrder[exp.uiIdx];}
+function curData(){return exp.result[curKey()+'_ui'];}
+function curFlights(){return curKey()==='good'?FLIGHTS_GOOD:FLIGHTS_BAD;}
+function setFill(id,f){const e=$(id);if(e)e.style.width=(f*100)+'%';}
+
+function checkAnswer(taskId, answer){
+  const flights = curFlights();
+  if(taskId==='task1'){
+    const cheapest = flights.reduce((m,f)=>f.price<m.price?f:m);
+    return answer.trim()===cheapest.dep;
+  }
+  if(taskId==='task2'){
+    const count = flights.filter(f=>f.dep>='08:00' && f.price<10000).length;
+    return parseInt(answer)===count;
+  }
+  if(taskId==='task3'){
+    // 良いUI：Starterに手荷物なし→いいえ、悪いUI：Flexに手荷物あり→はい
+    return curKey()==='good' ? answer==='いいえ' : answer==='はい';
+  }
+  return true;
+}
+
+// ── 実験フロー ──
+function startExp(){
+  const ini=$('inp-ini').value.trim();
+  const age=parseInt($('inp-age').value);
+  const gender=document.querySelector('input[name=gender]:checked');
+  if(!ini){alert('イニシャルを入力してください');return;}
+  if(!age||age<10||age>100){alert('年齢を正しく入力してください');return;}
+  if(!gender){alert('性別を選択してください');return;}
+  const grp=Math.random()<0.5?'A':'B';
+  exp.info={initial:ini,age,gender:gender.value,ts_start:new Date().toISOString()};
+  exp.group=grp;
+  exp.uiOrder=exp.group==='A'?['good','bad']:['bad','good'];
+  exp.uiIdx=0;exp.taskIdx=0;
+  showPre();
+}
+
+function showPre(){
+  const t=TASKS[exp.taskIdx];
+  const isBad = curKey()==='bad';
+  const instruction = (t.id==='task3'&&isBad) ? t.instruction_bad : t.instruction;
+  const short       = (t.id==='task3'&&isBad) ? t.short_bad       : t.short;
+  const tutorial    = (t.id==='task3'&&isBad) ? t.tutorial_bad     : t.tutorial;
+  const frac=(exp.uiIdx*5+exp.taskIdx)/10;
+  $('pre-meta').textContent=`ページ ${exp.uiIdx+1} / 2　｜　${t.title}`;
+  $('pre-title').textContent=t.title;
+  $('pre-body').textContent=instruction;
+  setFill('prog',frac); setFill('prog2',frac);
+  $('pre-tutorial').innerHTML=`<div style="font-size:13px;color:#92400e;font-weight:600;margin-bottom:6px">📋 操作のヒント</div><div style="font-size:13px;color:#78350f;line-height:1.8;white-space:pre-line">${tutorial}</div>`;
+  $('pre-hint-answer').style.display=(t.type!=='navigate')?'inline':'none';
+  $('pre-hint-nav').style.display=(t.type==='navigate')?'inline':'none';
+  show('s-pre');
+}
+
+function startTask(){
+  const t=TASKS[exp.taskIdx];
+  confirmCount=0;
+  bk={screen:'list',flight:null,cls:null,baggage:0};
+  renderUI();
+  const isBad=curKey()==='bad';
+  const shortText=(t.id==='task3'&&isBad)?t.short_bad:t.short;
+  $('ov-num').textContent=`ページ ${exp.uiIdx+1}/2 ｜ ${t.title}`;
+  $('ov-task').textContent=shortText;
+  $('ov-ans-text').style.display='none';
+  $('ov-ans-radio').style.display='none';
+  $('ov-ans-select').style.display='none';
+  $('ov-hint').style.display='none';
+  if(t.type==='answer-select'){
+    $('ov-ans-select').style.display='flex';
+    const sel=$('ans-select');
+    sel.innerHTML='<option value="">選択してください</option>';
+    let opts=[];
+    if(t.id==='task1'){
+      // 現在のUIの出発時刻を時系列順に並べて選択肢に
+      const times=[...curFlights()].sort((a,b)=>a.dep.localeCompare(b.dep));
+      opts=times.map(f=>({v:f.dep,l:f.dep}));
+    } else if(t.id==='task2'){
+      opts=[1,2,3,4,5,6,7,8].map(n=>({v:String(n),l:n+'便'}));
+    }
+    opts.forEach(o=>{const op=document.createElement('option');op.value=o.v;op.textContent=o.l;sel.appendChild(op);});
+    sel.value='';
+  } else if(t.type==='answer-text'){
+    $('ov-ans-text').style.display='flex';
+    $('ans-input').type=t.inputType;
+    $('ans-input').placeholder=t.placeholder;
+    $('ans-input').value='';
+  } else if(t.type==='answer-radio'){
+    $('ov-ans-radio').style.display='flex';
+    document.querySelectorAll('input[name="ans-r"]').forEach(r=>r.checked=false);
+  } else {
+    $('ov-hint').style.display='flex';
+  }
+  exp.startTime=performance.now();
+  show('s-ui');
+}
+
+function backToPreTask(){
+  confirmCount=0;
+  show('s-pre');
+}
+
+function submitAnswer(){
+  const t=TASKS[exp.taskIdx];
+  let answer='';
+  if(t.type==='answer-select'){
+    answer=$('ans-select').value;
+    if(!answer){alert('選択してください');return;}
+  } else if(t.type==='answer-text'){
+    answer=$('ans-input').value.trim();
+    if(!answer){alert('回答を入力してください');return;}
+  } else {
+    const r=document.querySelector('input[name="ans-r"]:checked');
+    if(!r){alert('選択してください');return;}
+    answer=r.value;
+  }
+  const elapsed=Math.round(performance.now()-exp.startTime);
+  const correct=checkAnswer(t.id,answer);
+  curData().tasks[t.id]={time_ms:elapsed,completed:true,answer,correct,timeout:false,memo:''};
+  showPostTask();
+}
+
+function checkConfirmAuto(){
+  const t=TASKS[exp.taskIdx];
+  if(t.type!=='navigate')return;
+
+  if(t.id==='task4'){
+    // 正解：7:00以降・空席あり・最安の便 × Plusクラス
+    const correctFlight=curFlights()
+      .filter(f=>f.dep>='07:00'&&f.seats!=='none')
+      .reduce((m,f)=>f.price<m.price?f:m);
+    const flightOk=bk.flight&&bk.flight.id===correctFlight.id;
+    const classOk=bk.cls==='plus';
+
+    if(!flightOk||!classOk){
+      let msg='⚠️ 条件が合っていません。\n\n';
+      if(!flightOk) msg+='・7:00以降で最も価格が安い便を選んでください\n';
+      if(!classOk)  msg+='・「Plus」クラスを選択してください\n';
+      msg+='\n「← 変更する」ボタンから前の画面に戻って修正してください。';
+      alert(msg);
+      return;
+    }
+    const elapsed=Math.round(performance.now()-exp.startTime);
+    curData().tasks[t.id]={time_ms:elapsed,completed:true,timeout:false,memo:''};
+    flashComplete();
+    setTimeout(showPostTask,700);
+
+  } else if(t.id==='task5'){
+    if(confirmCount===0){
+      // 1回目：Starterクラスであること
+      if(bk.cls!=='starter'){
+        alert('⚠️ 1回目はまず「Starter」クラスで確認画面まで進んでください。\n\n「← 変更する」ボタンから前の画面に戻って修正してください。');
+        return;
+      }
+      confirmCount=1;
+      flashStep1();
+    } else if(confirmCount===1){
+      // 2回目：Plusクラスであること
+      if(bk.cls!=='plus'){
+        alert('⚠️ 2回目は「Plus」クラスで確認画面まで進んでください。\n\n「← 変更する」ボタンから前の画面に戻って修正してください。');
+        return;
+      }
+      const elapsed=Math.round(performance.now()-exp.startTime);
+      curData().tasks[t.id]={time_ms:elapsed,completed:true,timeout:false,memo:''};
+      flashComplete();
+      setTimeout(showPostTask,700);
+    }
+  }
+}
+
+function flashComplete(){
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#16a34a;color:#fff;padding:18px 36px;border-radius:12px;font-size:22px;font-weight:700;z-index:99999;pointer-events:none;text-align:center;transition:opacity .5s ease';
+  el.textContent='✓ タスク完了！';
+  document.body.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>document.body.removeChild(el),500);},500);
+}
+
+function flashStep1(){
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a56db;color:#fff;padding:22px 36px;border-radius:12px;font-size:17px;font-weight:700;z-index:99999;pointer-events:none;text-align:center;line-height:1.7;white-space:pre-line;transition:opacity .5s ease';
+  el.textContent='✓ 1回目完了！\n\n次は「Plus」クラスに変更して\n再度確認画面まで進んでください';
+  document.body.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>document.body.removeChild(el),500);},2500);
+}
+
+function showPostTask(){
+  const templates=curKey()==='good'?MEMO_TEMPLATES_GOOD:MEMO_TEMPLATES_BAD;
+  $('memo-checks').innerHTML=templates.map(t=>`<label class="pill"><input type="checkbox" value="${t}"> ${t}</label>`).join('');
+  $('memo-free').value='';
+  show('s-post');
+}
+
+function submitPost(){
+  const checks=Array.from(document.querySelectorAll('#memo-checks input:checked')).map(c=>c.value);
+  if(checks.length===0){alert('気になった点を1つ以上選択してください');return;}
+  const free=$('memo-free').value.trim();
+  const memo=[...checks,...(free?[free]:[])].join(' ｜ ');
+  const tid=TASKS[exp.taskIdx].id;
+  if(curData().tasks[tid]) curData().tasks[tid].memo=memo;
+  exp.taskIdx++; confirmCount=0;
+  if(exp.taskIdx<5){showPre();}else{buildSUS();show('s-sus');}
+}
+
+function buildSUS(){
+  $('sus-body').innerHTML=SUS_ITEMS.map((q,i)=>`
+    <div class="sus-item" data-v="">
+      <div class="sus-q">${i+1}. ${q}</div>
+      <div class="sus-row">
+        <span class="sus-cap">全くそう思わない</span>
+        <div class="sus-btns">${[1,2,3,4,5].map(v=>`<button class="sus-b" onclick="setSUS(this,${i},${v})">${v}</button>`).join('')}</div>
+        <span class="sus-cap r">非常にそう思う</span>
+      </div>
+    </div>`).join('');
+}
+function setSUS(btn,idx,val){
+  btn.closest('.sus-item').querySelectorAll('.sus-b').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  btn.closest('.sus-item').dataset.v=val;
+}
+function submitSUS(){
+  const items=document.querySelectorAll('.sus-item');
+  let raw=[],ok=true;
+  items.forEach(it=>{if(!it.dataset.v){ok=false;}else raw.push(parseInt(it.dataset.v));});
+  if(!ok){alert('すべての項目を評価してください');return;}
+  let total=0;
+  raw.forEach((v,i)=>{total+=i%2===0?v-1:5-v;});
+  curData().sus_raw=raw; curData().sus_score=Math.round(total*2.5);
+  // s-free画面を構築してから表示
+  const freeTemplates=FREE_TEMPLATES;
+  $('free-checks').innerHTML=freeTemplates.map(t=>`<label class="pill"><input type="checkbox" value="${t}"> ${t}</label>`).join('');
+  $('free-txt').value='';
+  show('s-free');
+}
+function submitFree(){
+  const checks=Array.from(document.querySelectorAll('#free-checks input:checked')).map(c=>c.value);
+  if(checks.length===0){alert('1つ以上選択してください');return;}
+  const free=$('free-txt').value.trim();
+  curData().free_reason=[...checks,...(free?[free]:[])].join(' ｜ ');
+  exp.uiIdx++; exp.taskIdx=0;
+  if(exp.uiIdx<2){show('s-tr');}else{$('comp-reason').value='';show('s-comp');}
+}
+function nextUI(){showPre();}
+
+function submitComp(){
+  const pref=document.querySelector('input[name=pref]:checked');
+  if(!pref){alert('どちらが使いやすかったか選択してください');return;}
+  const reason=$('comp-reason').value.trim();
+  if(!reason){alert('Q2の理由を入力してください');return;}
+  const map={first:exp.uiOrder[0],second:exp.uiOrder[1],same:'same'};
+  exp.result.comparison={preferred:map[pref.value],reason};
+  show('s-sending');
+  submitData();
+}
+
+// ── データ送信 ──
+function buildPayload(){
+  const g=exp.result.good_ui, b=exp.result.bad_ui;
+  const td=(ui,n)=>ui.tasks['task'+n]||{};
+  const p={
+    timestamp:new Date().toISOString(),
+    initials:exp.info.initial, age:exp.info.age, gender:exp.info.gender,
+    group:exp.group, ui_order:exp.uiOrder.join('→'),
+  };
+  // タスク1〜3（回答あり）
+  [1,2,3].forEach(n=>{
+    const gd=td(g,n), bd=td(b,n);
+    p[`good_t${n}_ms`]=gd.time_ms||''; p[`good_t${n}_done`]=gd.completed!==undefined?gd.completed:'';
+    p[`good_t${n}_answer`]=gd.answer||''; p[`good_t${n}_correct`]=gd.correct!==undefined?gd.correct:'';
+    p[`good_t${n}_timeout`]=gd.timeout!==undefined?gd.timeout:''; p[`good_t${n}_memo`]=gd.memo||'';
+    p[`bad_t${n}_ms`]=bd.time_ms||'';  p[`bad_t${n}_done`]=bd.completed!==undefined?bd.completed:'';
+    p[`bad_t${n}_answer`]=bd.answer||''; p[`bad_t${n}_correct`]=bd.correct!==undefined?bd.correct:'';
+    p[`bad_t${n}_timeout`]=bd.timeout!==undefined?bd.timeout:''; p[`bad_t${n}_memo`]=bd.memo||'';
+  });
+  // タスク4〜5（ナビゲーション）
+  [4,5].forEach(n=>{
+    const gd=td(g,n), bd=td(b,n);
+    p[`good_t${n}_ms`]=gd.time_ms||''; p[`good_t${n}_done`]=gd.completed!==undefined?gd.completed:'';
+    p[`good_t${n}_timeout`]=gd.timeout!==undefined?gd.timeout:''; p[`good_t${n}_memo`]=gd.memo||'';
+    p[`bad_t${n}_ms`]=bd.time_ms||'';  p[`bad_t${n}_done`]=bd.completed!==undefined?bd.completed:'';
+    p[`bad_t${n}_timeout`]=bd.timeout!==undefined?bd.timeout:''; p[`bad_t${n}_memo`]=bd.memo||'';
+  });
+  // SUS
+  g.sus_raw.forEach((v,i)=>{p[`good_sus_${i+1}`]=v;}); p.good_sus_score=g.sus_score; p.good_reason=g.free_reason;
+  b.sus_raw.forEach((v,i)=>{p[`bad_sus_${i+1}`]=v;});  p.bad_sus_score=b.sus_score;  p.bad_reason=b.free_reason;
+  p.cmp_preferred=exp.result.comparison.preferred;
+  p.cmp_reason=exp.result.comparison.reason;
+  p.ts_start=exp.info.ts_start;
+  return p;
+}
+
+async function submitData(){
+  const payload=buildPayload();
+  try{
+    await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+    show('s-done');
+  }catch(e){
+    $('done-err').style.display='block';
+    $('fallback-data').value=JSON.stringify(payload,null,2);
+    show('s-done');
+  }
+}
+function copyFallback(){$('fallback-data').select();document.execCommand('copy');alert('コピーしました。');}
+
+// ── UI描画・イベント ──
+function renderUI(){$('ui-area').innerHTML=curKey()==='good'?renderGood():renderBad();}
+
+document.addEventListener('click',function(e){
+  if(!$('s-ui').classList.contains('active'))return;
+  const flEl=e.target.closest('[data-flight]');
+  if(flEl){bk.flight=curFlights().find(f=>f.id===flEl.dataset.flight);bk.screen='class';bk.cls=null;renderUI();return;}
+  const clEl=e.target.closest('[data-cls]');
+  if(clEl){bk.cls=clEl.dataset.cls;renderUI();return;}
+  const id=e.target.id;
+  if(id==='btn-cls-next'){if(!bk.cls){alert('クラスを選択してください');return;}bk.screen='options';renderUI();return;}
+  if(id==='btn-opt-next'){bk.screen='confirm';renderUI();checkConfirmAuto();return;}
+  if(id==='btn-confirm'){
+    alert('⚠️ 実験中は予約の確定はできません。\n「← 変更する」ボタンから前の画面に戻り、タスクを続けてください。');
+    return;
+  }
+  if(id==='btn-back-list'){bk.screen='list';bk.flight=null;bk.cls=null;renderUI();return;}
+  if(id==='btn-back-class'){bk.screen='class';renderUI();return;}
+  if(id==='btn-back-options'){bk.screen='options';renderUI();return;}
+  if(e.target.matches('.gu-acc-hdr')){e.target.nextElementSibling.classList.toggle('open');return;}
+});
+
+// ━━━ GOOD UI ━━━
+function renderGood(){
+  if(bk.screen==='list')return gList();
+  if(bk.screen==='class')return gClass();
+  if(bk.screen==='options')return gOptions();
+  if(bk.screen==='confirm')return gConfirm();
+  return gDone();
+}
+
+function gList(){
+  const flights=curFlights();
+  const fls=flights.map(f=>`
+  <div class="gu-fl${f.seats==='none'?' none':''}" ${f.seats!=='none'?`data-flight="${f.id}"`:''}
+       style="${f.seats==='none'?'cursor:not-allowed':''}" >
+    <div>
+      <div class="gu-fl-times"><span class="gu-dep">${f.dep}</span><span class="gu-arrow"> ──▶ </span><span class="gu-arr">${f.arr}</span></div>
+      <div class="gu-fl-dur">所要時間 2時間00分</div>
+      <div class="gu-fl-code">${f.id}｜大阪（関西）→ 東京（成田）</div>
+    </div>
+    <div style="text-align:right">
+      <div class="gu-fl-price">${fmt(f.price)}<span style="font-size:14px;color:#888;font-weight:400">〜</span></div>
+      <div class="gu-fl-price-lbl">Starterクラス / 1名</div>
+      ${f.seats==='few'?'<div class="gu-badge few">残席わずか</div>':f.seats==='none'?'<div class="gu-badge none">空席なし</div>':'<div class="gu-badge ok">残席あり</div>'}
+    </div>
+  </div>`).join('');
+  return `<div class="gu">
+  <div class="gu-hdr"><span class="gu-logo">SKYWAY</span><span class="gu-logo-sub">国内線予約</span></div>
+  <div class="gu-main">
+    <div class="gu-bc"><strong>便を選ぶ</strong> → クラスを選ぶ → オプション → 確認</div>
+    <div class="gu-search-box">
+      <div><div class="gu-route">大阪（関西）→ 東京（成田）</div><div class="gu-route-meta">2025年12月14日（日）｜1名</div></div>
+      <div style="font-size:13px;color:#1a56db;font-weight:600">${flights.length}便</div>
+    </div>
+    <div class="gu-acc">
+      <div class="gu-acc-hdr">📋 クラス内容を確認する <span>▼</span></div>
+      <div class="gu-acc-body">
+        <table class="gu-tbl">
+          <thead><tr><th></th><th>Starter</th><th>Plus</th><th>Flex</th></tr></thead>
+          <tbody>
+            <tr><td>受託手荷物</td><td class="na">なし</td><td>20kg×1個</td><td>20kg×2個</td></tr>
+            <tr><td>座席</td><td class="na">ランダム</td><td>指定可</td><td>指定込み</td></tr>
+            <tr><td>変更・払戻</td><td class="na">不可</td><td>不可</td><td>可</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="gu-sec">便を選んでください</div>
+    <div class="gu-fl-list">${fls}</div>
+  </div>
+</div>`;
+}
+
+function gClass(){
+  const f=bk.flight;
+  const cards=CLASSES.map(c=>{const s=bk.cls===c.id;return `<div class="gu-cls-card${s?' sel':''}" data-cls="${c.id}">
+    <div class="gu-cls-name">${c.name}</div>
+    <div class="gu-cls-price">${fmt(f.price+c.extra)}<span>/名</span></div>
+    <div class="gu-cls-row"><span class="gu-cls-k">受託手荷物</span><span class="${c.id==='starter'?'gu-cls-na':''}">${c.bag}</span></div>
+    <div class="gu-cls-row"><span class="gu-cls-k">座席</span><span>${c.seat}</span></div>
+    <div class="gu-cls-row"><span class="gu-cls-k">変更・払戻</span><span>${c.change}</span></div>
+    ${s?'<div class="gu-cls-mark">✓ 選択中</div>':''}
+  </div>`;}).join('');
+  return `<div class="gu">
+  <div class="gu-hdr"><span class="gu-logo">SKYWAY</span><span class="gu-logo-sub">国内線予約</span></div>
+  <div class="gu-main">
+    <div class="gu-bc"><span class="done">便を選ぶ</span> → <strong>クラスを選ぶ</strong> → オプション → 確認</div>
+    <div class="gu-sel-sum">
+      <span><strong>${f.id}</strong>｜${f.dep} → ${f.arr}｜大阪（関西）→ 東京（成田）</span>
+      <button class="gu-back-link" id="btn-back-list">← 便を変更</button>
+    </div>
+    <div class="gu-sec">クラスを選んでください</div>
+    <div class="gu-cls-grid">${cards}</div>
+    <button class="gu-next" id="btn-cls-next" ${!bk.cls?'disabled':''}>次へ進む →</button>
+  </div>
+</div>`;
+}
+
+function gOptions(){
+  const f=bk.flight;const c=CLASSES.find(c=>c.id===bk.cls);
+  const opt=bk.cls==='starter'
+    ?`<div class="gu-opt-card"><div class="gu-opt-row">
+        <div><div class="gu-opt-name">受託手荷物を追加する</div><div class="gu-opt-desc">スーツケースなど 20kg まで 1個</div></div>
+        <div class="gu-opt-price">+¥2,200</div>
+        <label class="gu-opt-toggle"><input type="checkbox" id="opt-bag" ${bk.baggage?'checked':''} onchange="bk.baggage=this.checked?1:0"> 追加する</label>
+      </div></div>`
+    :`<div class="gu-opt-inc">✅ ${c.bag}が含まれています</div>`;
+  return `<div class="gu">
+  <div class="gu-hdr"><span class="gu-logo">SKYWAY</span><span class="gu-logo-sub">国内線予約</span></div>
+  <div class="gu-main">
+    <div class="gu-bc"><span class="done">便を選ぶ → クラスを選ぶ</span> → <strong>オプション</strong> → 確認</div>
+    <div class="gu-sel-sum">
+      <span>${f.id}｜${f.dep} → ${f.arr}｜${c.name}クラス</span>
+      <button class="gu-back-link" id="btn-back-class">← クラスを変更</button>
+    </div>
+    <div class="gu-sec">オプション</div>${opt}
+    <button class="gu-next" id="btn-opt-next" style="margin-top:20px">次へ進む →</button>
+  </div>
+</div>`;
+}
+
+function gConfirm(){
+  const f=bk.flight;const c=CLASSES.find(c=>c.id===bk.cls);
+  const bagEx=bk.cls==='starter'?bk.baggage*2200:0;
+  const total=f.price+c.extra+bagEx;
+  return `<div class="gu">
+  <div class="gu-hdr"><span class="gu-logo">SKYWAY</span><span class="gu-logo-sub">国内線予約</span></div>
+  <div class="gu-main">
+    <div class="gu-bc"><span class="done">便を選ぶ → クラスを選ぶ → オプション</span> → <strong>確認</strong></div>
+    <div class="gu-cfm-card">
+      <div class="gu-cfm-title">ご予約内容の確認</div>
+      <div class="gu-cfm-row"><span class="lbl">路線</span><span class="val">大阪（関西）→ 東京（成田）</span></div>
+      <div class="gu-cfm-row"><span class="lbl">日付</span><span class="val">2025年12月14日（日）</span></div>
+      <div class="gu-cfm-row"><span class="lbl">便名</span><span class="val">${f.id}</span></div>
+      <div class="gu-cfm-row"><span class="lbl">出発 / 到着</span><span class="val">${f.dep} / ${f.arr}</span></div>
+      <div class="gu-cfm-row"><span class="lbl">クラス</span><span class="val">${c.name}</span></div>
+      <div class="gu-cfm-row"><span class="lbl">受託手荷物</span><span class="val">${bk.cls==='starter'?(bk.baggage?'20kg×1個（追加）':'なし'):c.bag}</span></div>
+      <div class="gu-cfm-row total"><span class="lbl">合計金額</span><span class="val">${fmt(total)}</span></div>
+    </div>
+    <div class="gu-cfm-btns">
+      <button class="gu-cfm-back" id="btn-back-options">← 変更する</button>
+      <button class="gu-cfm-ok" id="btn-confirm">この内容で予約する →</button>
+    </div>
+  </div>
+</div>`;
+}
+
+function gDone(){
+  return `<div class="gu">
+  <div class="gu-hdr"><span class="gu-logo">SKYWAY</span><span class="gu-logo-sub">国内線予約</span></div>
+  <div class="gu-main"><div class="gu-done">
+    <div class="gu-done-ico">✅</div>
+    <div class="gu-done-title">ご予約が完了しました</div>
+    <div class="gu-done-sub">予約番号：SKYWAY-2025-78432</div>
+  </div></div>
+</div>`;
+}
+
+// ━━━ BAD UI ━━━
+function renderBad(){
+  if(bk.screen==='list')return bList();
+  if(bk.screen==='class')return bClass();
+  if(bk.screen==='options')return bOptions();
+  if(bk.screen==='confirm')return bConfirm();
+  return bDone();
+}
+const BU_NAV=`<a href="#">ホーム</a><a href="#">国内線</a><a href="#">国際線</a><a href="#">ホテル</a><a href="#">レンタカー</a><a href="#">会員登録</a><a href="#">ログイン</a><a href="#">よくあるご質問</a><a href="#">お問い合わせ</a><a href="#">アクセス</a><a href="#">特定商取引法に基づく表記</a><a href="#">プライバシーポリシー</a>`;
+function buH(){return `<div class="bu-hdr"><div class="bu-hdr-top">SKYWAY 航空券予約システム</div><div class="bu-nav">${BU_NAV}</div></div><div class="bu-banner">【お知らせ】年末年始の予約受付開始！会員登録でマイル2倍！詳しくはこちら &gt;&gt;</div>`;}
+
+function bList(){
+  const flights=curFlights();
+  const rows=flights.map(f=>`<div class="bu-fl-row${bk.flight&&bk.flight.id===f.id?' sel':''}${f.seats==='none'?' none-seats':''}" ${f.seats!=='none'?`data-flight="${f.id}"`:''}>${f.id}　大阪（関西）${f.dep}発 → 東京（成田）${f.arr}着　所要2時間　${fmt(f.price)}〜　${f.seats==='few'?'※残席わずか':f.seats==='none'?'【空席なし】':''}</div>`).join('');
+  return `<div class="bu">${buH()}
+  <div class="bu-main">
+    <div class="bu-sec-hdr">■ 検索結果</div>
+    <div class="bu-txt">大阪（関西）→東京（成田）2025年12月14日（日）1名様の検索結果です。各クラスの詳細につきましては、Starterクラスは手荷物なし（機内持込手荷物7kgまで）、Plusクラスは受託手荷物20kg×1個込み、Flexクラスは受託手荷物20kg×2個込みとなっております。変更・払戻については各クラスの規定によります。料金は変動する場合がございますのでご了承ください。</div>
+    <div class="bu-fl-list">${rows}</div>
+    <div class="bu-note">※表示価格はStarterクラス1名様分の運賃です。諸税・サービス料が別途かかる場合があります。</div>
+    <div class="bu-note">※座席の空き状況は随時変動します。【空席なし】の便は現在ご予約いただけません。</div>
+    <div class="bu-note">※各クラスの詳細については会員ページよりご確認ください。</div>
+  </div>
+  <div class="bu-ftr">Copyright © 2025 SKYWAY All Rights Reserved. ｜ <a href="#">プライバシーポリシー</a> ｜ <a href="#">特定商取引法</a></div>
+</div>`;
+}
+
+function bClass(){
+  const f=bk.flight;
+  const rows=CLASSES.map(c=>`<div class="bu-cls-item${bk.cls===c.id?' bu-sel':''}" data-cls="${c.id}">${c.name}：${fmt(f.price+c.extra)}/名（受託手荷物${c.bag}、座席${c.seat}、変更・払戻${c.change}）</div>`).join('');
+  return `<div class="bu">${buH()}
+  <div class="bu-main">
+    <div class="bu-sec-hdr">■ クラスのご選択</div>
+    <div class="bu-txt">ご希望のクラスをクリックしてご選択ください。選択されたクラスで次の手順に進みます。クラスの変更は前の画面にお戻りいただくことで可能です。なお、Starterクラスは受託手荷物が含まれておりませんのでご注意ください。</div>
+    <div class="bu-cls-list">${rows}</div>
+    <div class="bu-note">※クラスをクリックして選択した後、下の「次へ」ボタンを押してください。</div>
+    <div style="text-align:right;margin-top:10px"><button class="bu-sub" id="btn-cls-next">次へ &gt;</button></div>
+    <div style="font-size:11px;color:#aaa;margin-top:6px;text-align:right"><a href="#" id="btn-back-list" style="color:#aaa;font-size:11px">前の画面に戻る</a></div>
+  </div>
+  <div class="bu-ftr">Copyright © 2025 SKYWAY All Rights Reserved.</div>
+</div>`;
+}
+
+function bOptions(){
+  const c=CLASSES.find(c=>c.id===bk.cls);
+  const opt=bk.cls==='starter'
+    ?`<div class="bu-txt">受託手荷物（20kgまで）を追加される場合は下記にチェックを入れてください。1個あたり2,200円が加算されます。<br><br><label><input type="checkbox" id="opt-bag" ${bk.baggage?'checked':''} onchange="bk.baggage=this.checked?1:0"> 受託手荷物を追加する（+¥2,200）</label></div>`
+    :`<div class="bu-txt">選択されたクラスには受託手荷物が含まれています。</div>`;
+  return `<div class="bu">${buH()}
+  <div class="bu-main">
+    <div class="bu-sec-hdr">■ オプションのご選択</div>${opt}
+    <div class="bu-note">※オプションは次の確認画面では変更できません。変更が必要な場合は前の画面にお戻りください。</div>
+    <div style="text-align:right;margin-top:10px"><button class="bu-sub" id="btn-opt-next">次へ &gt;</button></div>
+    <div style="font-size:11px;color:#aaa;margin-top:6px;text-align:right"><a href="#" id="btn-back-class" style="color:#aaa;font-size:11px">前の画面に戻る</a></div>
+  </div>
+  <div class="bu-ftr">Copyright © 2025 SKYWAY All Rights Reserved.</div>
+</div>`;
+}
+
+function bConfirm(){
+  const f=bk.flight;const c=CLASSES.find(c=>c.id===bk.cls);
+  const bagEx=bk.cls==='starter'?bk.baggage*2200:0;
+  const total=f.price+c.extra+bagEx;
+  return `<div class="bu">${buH()}
+  <div class="bu-main">
+    <div class="bu-sec-hdr">■ ご予約内容のご確認</div>
+    <div class="bu-txt">以下の内容でお申し込みを承ります。内容をご確認の上、お間違いがなければ「予約を確定する」ボタンを押してください。なお、ご予約内容の変更・キャンセルについては各クラスの規定に従います。<br><br>便名：${f.id}　路線：大阪（関西）→東京（成田）　出発：${f.dep}　到着：${f.arr}　クラス：${c.name}　受託手荷物：${bk.cls==='starter'?(bk.baggage?'あり（追加）':'なし'):c.bag}　合計：${fmt(total)}</div>
+    <div class="bu-note">※Flexクラス以外は変更・払戻ができませんのでご注意ください。</div>
+    <div class="bu-note">※当日はご予約番号が必要となります。確認メールをご確認ください。</div>
+    <div style="text-align:right;margin-top:16px"><button class="bu-sub-ok" id="btn-confirm">予約を確定する</button></div>
+    <div style="font-size:11px;color:#aaa;margin-top:8px;text-align:right"><a href="#" id="btn-back-options" style="color:#aaa;font-size:11px">前の画面に戻る（内容を変更する場合）</a></div>
+  </div>
+  <div class="bu-ftr">Copyright © 2025 SKYWAY All Rights Reserved.</div>
+</div>`;
+}
+
+function bDone(){
+  return `<div class="bu">${buH()}
+  <div class="bu-main">
+    <div class="bu-sec-hdr">■ お申し込み完了</div>
+    <div class="bu-txt">お申し込みを承りました。ご登録のメールアドレス宛に確認メールをお送りします。</div>
+    <div class="bu-note">予約番号：SKYWAY-2025-78432</div>
+  </div>
+  <div class="bu-ftr">Copyright © 2025 SKYWAY All Rights Reserved.</div>
+</div>`;
+}
+</script>
+</body>
+</html>
