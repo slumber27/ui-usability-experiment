@@ -183,15 +183,6 @@ body{font-family:"Yu Gothic UI","游ゴシック UI","游ゴシック",YuGothic,
       <label class="pill"><input type="radio" name="gender" value="女性"> 女性</label>
     </div>
   </div>
-  <div class="fw-card">
-    <span class="fw-label">学年</span>
-    <div class="pills">
-      <label class="pill"><input type="radio" name="grade" value="1年"> 1年</label>
-      <label class="pill"><input type="radio" name="grade" value="2年"> 2年</label>
-      <label class="pill"><input type="radio" name="grade" value="3年"> 3年</label>
-      <label class="pill"><input type="radio" name="grade" value="4年"> 4年</label>
-    </div>
-  </div>
   <button class="fw-btn" onclick="startExp()">実験を開始する →</button>
 </div>
 </div>
@@ -534,13 +525,11 @@ function startExp(){
   const ini=$('inp-ini').value.trim();
   const age=parseInt($('inp-age').value);
   const gender=document.querySelector('input[name=gender]:checked');
-  const grade=document.querySelector('input[name=grade]:checked');
   if(!ini){alert('イニシャルを入力してください');return;}
   if(!age){alert('年齢を選択してください');return;}
   if(!gender){alert('性別を選択してください');return;}
-  if(!grade){alert('学年を選択してください');return;}
   const grp=Math.random()<0.5?'A':'B';
-  exp.info={initial:ini,age,gender:gender.value,grade:grade.value,ts_start:new Date().toISOString()};
+  exp.info={initial:ini,age,gender:gender.value,ts_start:new Date().toISOString()};
   exp.group=grp;
   exp.uiOrder=exp.group==='A'?['good','bad']:['bad','good'];
   exp.uiIdx=0;exp.taskIdx=0;
@@ -783,7 +772,7 @@ function buildPayload(){
   const td=(ui,n)=>ui.tasks['task'+n]||{};
   const p={
     timestamp:new Date().toISOString(),
-    initials:exp.info.initial, age:exp.info.age, gender:exp.info.gender, grade:exp.info.grade,
+    initials:exp.info.initial, age:exp.info.age, gender:exp.info.gender,
     group:exp.group, ui_order:exp.uiOrder.join('→'),
   };
   // タスク1〜3（回答あり）
