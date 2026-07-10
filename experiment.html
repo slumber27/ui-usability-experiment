@@ -183,6 +183,15 @@ body{font-family:"Yu Gothic UI","游ゴシック UI","游ゴシック",YuGothic,
       <label class="pill"><input type="radio" name="gender" value="女性"> 女性</label>
     </div>
   </div>
+  <div class="fw-card">
+    <span class="fw-label">学年</span>
+    <div class="pills">
+      <label class="pill"><input type="radio" name="grade" value="1年"> 1年</label>
+      <label class="pill"><input type="radio" name="grade" value="2年"> 2年</label>
+      <label class="pill"><input type="radio" name="grade" value="3年"> 3年</label>
+      <label class="pill"><input type="radio" name="grade" value="4年"> 4年</label>
+    </div>
+  </div>
   <button class="fw-btn" onclick="startExp()">実験を開始する →</button>
 </div>
 </div>
@@ -347,24 +356,17 @@ body{font-family:"Yu Gothic UI","游ゴシック UI","游ゴシック",YuGothic,
       <button class="fw-btn" onclick="copyFallback()" style="margin-top:10px;background:#dc2626">データをコピーする</button>
     </div>
   </div>
-  <div id="done-backup" style="display:none;margin-top:24px;text-align:left">
-    <details>
-      <summary style="cursor:pointer;font-size:13px;color:#888">▸ 回答データのバックアップを表示（万一送信できていなかった場合用）</summary>
-      <textarea id="backup-data" class="fw-textarea" style="font-size:11px;min-height:140px;font-family:monospace;margin-top:10px" readonly></textarea>
-      <button class="fw-btn fw-btn-ghost" onclick="copyBackup()" style="margin-top:10px">データをコピーする</button>
-    </details>
-  </div>
 </div>
 </div>
 
 <script>
 // ★ここを自分のApps Script URLに変更してください
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxYbLzboLQrLXgttn_9hL-niu0VJ-ptcdhBInpM8xCXNl-SC9KEktyEV52Xpg6QLlCf/exec';
+const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
 
 // 年齢プルダウンを動的生成
 (function(){
   const sel=document.getElementById('inp-age');
-  for(let i=15;i<=100;i++){const op=document.createElement('option');op.value=i;op.textContent=i;sel.appendChild(op);}
+  for(let i=0;i<=100;i++){const op=document.createElement('option');op.value=i;op.textContent=i;sel.appendChild(op);}
 })();
 
 // 制限時間なし
@@ -407,9 +409,9 @@ const TASKS = [
    tutorial:'便の一覧を確認して、最も安い価格の行を見つけてください。その便の「出発時刻」を下のプルダウンから選んで「回答する」を押してください。'},
   {id:'task2', type:'answer-select',
    title:'タスク 2 / 5',
-   instruction:'表示されている便の中で、出発時刻が朝 8:00以降 かつ 価格が10,000円未満 の便が何便あるか確認してください。\n※「空席なし」の便は数に含めません。',
-   short:'朝8:00以降で10,000円未満の便が何便あるか確認してください（空席なしは除く）',
-   tutorial:'出発時刻が8:00以降の便に絞り込み、その中で価格が10,000円未満のものをすべて数えてください。「空席なし」の便は数に含めないでください。その数を下のプルダウンから選んで「回答する」を押してください。'},
+   instruction:'表示されている便の中で、出発時刻が朝 8:00以降 かつ 価格が10,000円未満 の便が何便あるか確認してください。',
+   short:'朝8:00以降で10,000円未満の便が何便あるか確認してください',
+   tutorial:'出発時刻が8:00以降の便に絞り込み、その中で価格が10,000円未満のものをすべて数えてください。その数を下のプルダウンから選んで「回答する」を押してください。'},
   {id:'task3', type:'answer-radio',
    title:'タスク 3 / 5',
    instruction:'「Starter」クラスに受託手荷物（スーツケースなどを機内に預けること）は含まれますか？',
@@ -422,14 +424,12 @@ const TASKS = [
    title:'タスク 4 / 5',
    instruction:'出発時刻が 7:00以降 の便の中で最も価格が安い便を選んでください。\n「Plus」クラスを選択して確認画面まで進んでください。',
    short:'7:00以降で最安の便を選び、Plusクラスで確認画面まで進んでください',
-   tutorial:'7:00以降の便を確認し、価格が最も安い便をクリックしてください。\nクラス選択画面で「Plus」を選び、オプション画面を経て確認画面まで進んでください。\n⚠️「この内容で予約する」ボタンは押さないでください。確認画面に到達した時点で自動完了します。',
-   tutorial_bad:'7:00以降の便を確認し、価格が最も安い便をクリックしてください。\nクラス選択画面で「Plus」を選び、オプション画面を経て確認画面まで進んでください。\n⚠️「予約を確定する」ボタンは押さないでください。確認画面に到達した時点で自動完了します。'},
+   tutorial:'7:00以降の便を確認し、価格が最も安い便をクリックしてください。\nクラス選択画面で「Plus」を選び、オプション画面を経て確認画面まで進んでください。\n⚠️「この内容で予約する」ボタンは押さないでください。確認画面に到達した時点で自動完了します。'},
   {id:'task5', type:'navigate',
    title:'タスク 5 / 5',
    instruction:'価格が 2番目に高い便 を選び、「Starter」クラスで確認画面まで進んでください。\n次に「Plus」クラスに変更して、もう一度確認画面まで進んでください。',
    short:'価格が2番目に高い便を選び、Starter→確認画面 → Plus に変更して再度確認画面まで進んでください',
-   tutorial:'① 便の一覧で価格が2番目に高い便を探してクリックしてください。\n② 「Starter」クラスを選んで確認画面まで進んでください。\n⚠️「この内容で予約する」は押さないでください。\n③「← 変更する」で戻り、クラス選択で「Plus」に変更して再度確認画面まで進んでください。\n④ 2回目の確認画面到達で自動完了します。',
-   tutorial_bad:'① 便の一覧で価格が2番目に高い便を探してクリックしてください。\n② 「Starter」クラスを選んで確認画面まで進んでください。\n⚠️「予約を確定する」は押さないでください。\n③「前の画面に戻る」で戻り、クラス選択で「Plus」に変更して再度確認画面まで進んでください。\n④ 2回目の確認画面到達で自動完了します。'},
+   tutorial:'① 便の一覧で価格が2番目に高い便を探してクリックしてください。\n② 「Starter」クラスを選んで確認画面まで進んでください。\n⚠️「この内容で予約する」は押さないでください。\n③「← 変更する」で戻り、クラス選択で「Plus」に変更して再度確認画面まで進んでください。\n④ 2回目の確認画面到達で自動完了します。'},
 ];
 
 const SUS_ITEMS = [
@@ -499,8 +499,6 @@ function show(id){document.querySelectorAll('.sc').forEach(s=>s.classList.remove
 function curKey(){return exp.uiOrder[exp.uiIdx];}
 function curData(){return exp.result[curKey()+'_ui'];}
 function curFlights(){return curKey()==='good'?FLIGHTS_GOOD:FLIGHTS_BAD;}
-// 現在のUIでの「戻る」ボタンの表記（アラート文言用）
-function backBtnLabel(){return curKey()==='good'?'「← 変更する」ボタン':'「前の画面に戻る」リンク';}
 function setFill(id,f){const e=$(id);if(e)e.style.width=(f*100)+'%';}
 
 function checkAnswer(taskId, answer){
@@ -510,7 +508,7 @@ function checkAnswer(taskId, answer){
     return answer.trim()===cheapest.dep;
   }
   if(taskId==='task2'){
-    const count = flights.filter(f=>f.dep>='08:00' && f.price<10000 && f.seats!=='none').length;
+    const count = flights.filter(f=>f.dep>='08:00' && f.price<10000).length;
     return parseInt(answer)===count;
   }
   if(taskId==='task3'){
@@ -525,11 +523,13 @@ function startExp(){
   const ini=$('inp-ini').value.trim();
   const age=parseInt($('inp-age').value);
   const gender=document.querySelector('input[name=gender]:checked');
+  const grade=document.querySelector('input[name=grade]:checked');
   if(!ini){alert('イニシャルを入力してください');return;}
   if(!age){alert('年齢を選択してください');return;}
   if(!gender){alert('性別を選択してください');return;}
+  if(!grade){alert('学年を選択してください');return;}
   const grp=Math.random()<0.5?'A':'B';
-  exp.info={initial:ini,age,gender:gender.value,ts_start:new Date().toISOString()};
+  exp.info={initial:ini,age,gender:gender.value,grade:grade.value,ts_start:new Date().toISOString()};
   exp.group=grp;
   exp.uiOrder=exp.group==='A'?['good','bad']:['bad','good'];
   exp.uiIdx=0;exp.taskIdx=0;
@@ -539,9 +539,9 @@ function startExp(){
 function showPre(){
   const t=TASKS[exp.taskIdx];
   const isBad = curKey()==='bad';
-  const instruction = (isBad&&t.instruction_bad) ? t.instruction_bad : t.instruction;
-  const short       = (isBad&&t.short_bad)       ? t.short_bad       : t.short;
-  const tutorial    = (isBad&&t.tutorial_bad)    ? t.tutorial_bad    : t.tutorial;
+  const instruction = (t.id==='task3'&&isBad) ? t.instruction_bad : t.instruction;
+  const short       = (t.id==='task3'&&isBad) ? t.short_bad       : t.short;
+  const tutorial    = (t.id==='task3'&&isBad) ? t.tutorial_bad     : t.tutorial;
   const frac=(exp.uiIdx*5+exp.taskIdx)/10;
   $('pre-meta').textContent=`ページ ${exp.uiIdx+1} / 2　｜　${t.title}`;
   $('pre-title').textContent=t.title;
@@ -559,7 +559,7 @@ function startTask(){
   bk={screen:'list',flight:null,cls:null,baggage:0};
   renderUI();
   const isBad=curKey()==='bad';
-  const shortText=(isBad&&t.short_bad)?t.short_bad:t.short;
+  const shortText=(t.id==='task3'&&isBad)?t.short_bad:t.short;
   $('ov-num').textContent=`ページ ${exp.uiIdx+1}/2 ｜ ${t.title}`;
   $('ov-task').textContent=shortText;
   $('ov-ans-text').style.display='none';
@@ -596,7 +596,6 @@ function startTask(){
 }
 
 function backToPreTask(){
-  if(confirmCount>0 && !confirm('説明に戻ると、このタスクは最初からやり直しになります。\nよろしいですか？')) return;
   confirmCount=0;
   show('s-pre');
 }
@@ -637,7 +636,7 @@ function checkConfirmAuto(){
       let msg='⚠️ 条件が合っていません。\n\n';
       if(!flightOk) msg+='・7:00以降で最も価格が安い便を選んでください\n';
       if(!classOk)  msg+='・「Plus」クラスを選択してください\n';
-      msg+='\n'+backBtnLabel()+'から前の画面に戻って修正してください。';
+      msg+='\n「← 変更する」ボタンから前の画面に戻って修正してください。';
       alert(msg);
       return;
     }
@@ -654,22 +653,22 @@ function checkConfirmAuto(){
 
     if(confirmCount===0){
       if(!flightOk){
-        alert(`⚠️ 価格が2番目に高い便を選んでください。\n\n${backBtnLabel()}から前の画面に戻って便を選び直してください。`);
+        alert(`⚠️ 価格が2番目に高い便を選んでください。\n\n「← 変更する」ボタンから前の画面に戻って便を選び直してください。`);
         return;
       }
       if(bk.cls!=='starter'){
-        alert(`⚠️ 1回目はまず「Starter」クラスで確認画面まで進んでください。\n\n${backBtnLabel()}から前の画面に戻って修正してください。`);
+        alert('⚠️ 1回目はまず「Starter」クラスで確認画面まで進んでください。\n\n「← 変更する」ボタンから前の画面に戻って修正してください。');
         return;
       }
       confirmCount=1;
       flashStep1();
     } else if(confirmCount===1){
       if(!flightOk){
-        alert(`⚠️ 同じ便のまま「Plus」クラスに変更してください。\n\n${backBtnLabel()}で戻り、クラス選択画面で「Plus」を選んでください。`);
+        alert(`⚠️ 同じ便のまま「Plus」クラスに変更してください。\n\n「← 変更する」で戻り、クラス選択画面で「Plus」を選んでください。`);
         return;
       }
       if(bk.cls!=='plus'){
-        alert(`⚠️ 2回目は「Plus」クラスで確認画面まで進んでください。\n\n${backBtnLabel()}から前の画面に戻って修正してください。`);
+        alert('⚠️ 2回目は「Plus」クラスで確認画面まで進んでください。\n\n「← 変更する」ボタンから前の画面に戻って修正してください。');
         return;
       }
       const elapsed=Math.round(performance.now()-exp.startTime);
@@ -697,7 +696,6 @@ function flashStep1(){
 }
 
 function showPostTask(){
-  setFill('prog2',(exp.uiIdx*5+exp.taskIdx+1)/10);
   const templates=curKey()==='good'?MEMO_TEMPLATES_GOOD:MEMO_TEMPLATES_BAD;
   $('memo-checks').innerHTML=templates.map(t=>`<label class="pill"><input type="checkbox" value="${t}"> ${t}</label>`).join('');
   $('memo-free').value='';
@@ -772,7 +770,7 @@ function buildPayload(){
   const td=(ui,n)=>ui.tasks['task'+n]||{};
   const p={
     timestamp:new Date().toISOString(),
-    initials:exp.info.initial, age:exp.info.age, gender:exp.info.gender,
+    initials:exp.info.initial, age:exp.info.age, gender:exp.info.gender, grade:exp.info.grade,
     group:exp.group, ui_order:exp.uiOrder.join('→'),
   };
   // タスク1〜3（回答あり）
@@ -804,20 +802,16 @@ function buildPayload(){
 
 async function submitData(){
   const payload=buildPayload();
-  const json=JSON.stringify(payload,null,2);
   try{
     await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
-    // no-corsでは送信結果を確認できないため、成功時もバックアップのコピー導線を残す
-    $('backup-data').value=json;
-    $('done-backup').style.display='block';
+    show('s-done');
   }catch(e){
     $('done-err').style.display='block';
-    $('fallback-data').value=json;
+    $('fallback-data').value=JSON.stringify(payload,null,2);
+    show('s-done');
   }
-  show('s-done');
 }
 function copyFallback(){$('fallback-data').select();document.execCommand('copy');alert('コピーしました。');}
-function copyBackup(){$('backup-data').select();document.execCommand('copy');alert('コピーしました。');}
 
 // ── UI描画・イベント ──
 function renderUI(){$('ui-area').innerHTML=curKey()==='good'?renderGood():renderBad();}
@@ -832,14 +826,13 @@ document.addEventListener('click',function(e){
   if(id==='btn-cls-next'){if(!bk.cls){alert('クラスを選択してください');return;}bk.screen='options';renderUI();return;}
   if(id==='btn-opt-next'){bk.screen='confirm';renderUI();checkConfirmAuto();return;}
   if(id==='btn-confirm'){
-    alert('⚠️ 実験中は予約の確定はできません。\n'+backBtnLabel()+'から前の画面に戻り、タスクを続けてください。');
+    alert('⚠️ 実験中は予約の確定はできません。\n「← 変更する」ボタンから前の画面に戻り、タスクを続けてください。');
     return;
   }
-  if(id==='btn-back-list'){e.preventDefault();bk.screen='list';bk.flight=null;bk.cls=null;renderUI();return;}
-  if(id==='btn-back-class'){e.preventDefault();bk.screen='class';renderUI();return;}
-  if(id==='btn-back-options'){e.preventDefault();bk.screen='options';renderUI();return;}
-  const accHdr=e.target.closest('.gu-acc-hdr');
-  if(accHdr){accHdr.nextElementSibling.classList.toggle('open');return;}
+  if(id==='btn-back-list'){bk.screen='list';bk.flight=null;bk.cls=null;renderUI();return;}
+  if(id==='btn-back-class'){bk.screen='class';renderUI();return;}
+  if(id==='btn-back-options'){bk.screen='options';renderUI();return;}
+  if(e.target.matches('.gu-acc-hdr')){e.target.nextElementSibling.classList.toggle('open');return;}
 });
 
 // ━━━ GOOD UI ━━━
