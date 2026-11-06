@@ -338,21 +338,30 @@ body{font-family:"Yu Gothic UI","游ゴシック UI","游ゴシック",YuGothic,
 <div class="fw" style="text-align:center;padding-top:80px">
   <div style="font-size:60px;margin-bottom:16px">🎉</div>
   <div class="fw-h1">実験が完了しました</div>
-  <div class="fw-body">ご協力ありがとうございました。<br>このページは閉じていただいて構いません。</div>
-  <div id="done-err" style="display:none">
+  <div class="fw-body">ご協力ありがとうございました。<br>研究者から案内があるまで、このページは閉じずにお待ちください。</div>
+
+  <!-- 送信が明らかに失敗したとき（通信エラー）だけ表示 -->
+  <div id="done-err" style="display:none;margin-top:24px">
     <div class="fw-card" style="background:#fef2f2;border-color:#fca5a5;text-align:left">
       <div style="font-weight:700;color:#dc2626;margin-bottom:8px">⚠️ 送信に失敗しました</div>
-      <div style="font-size:13px;color:#7f1d1d;margin-bottom:10px">以下のデータをコピーして研究者に送ってください。</div>
-      <textarea id="fallback-data" class="fw-textarea" style="font-size:11px;min-height:140px;font-family:monospace" readonly></textarea>
-      <button class="fw-btn" onclick="copyFallback()" style="margin-top:10px;background:#dc2626">データをコピーする</button>
+      <div style="font-size:14px;color:#7f1d1d;line-height:1.8">データをコピーして、下記のGoogleフォームに貼り付けて送信してください。</div>
     </div>
   </div>
+
+  <!-- 全員に表示：送信できていなかった場合の予備手段 -->
   <div id="done-backup" style="display:none;margin-top:24px;text-align:left">
-    <details>
-      <summary style="cursor:pointer;font-size:13px;color:#888">▸ 回答データのバックアップを表示（万一送信できていなかった場合用）</summary>
-      <textarea id="backup-data" class="fw-textarea" style="font-size:11px;min-height:140px;font-family:monospace;margin-top:10px" readonly></textarea>
-      <button class="fw-btn fw-btn-ghost" onclick="copyBackup()" style="margin-top:10px">データをコピーする</button>
-    </details>
+    <div class="fw-card" style="background:#f8f9fb">
+      <div style="font-weight:700;color:#333;margin-bottom:6px">送信できていなかった場合</div>
+      <div style="font-size:13px;color:#555;line-height:1.8;margin-bottom:14px">データをコピーして、下記のGoogleフォームに貼り付けて送信してください。<br><span style="color:#888">※研究者から案内があった場合のみ行ってください。</span></div>
+      <button class="fw-btn fw-btn-ghost" onclick="copyData()">① データをコピーする</button>
+      <div id="copy-msg" style="display:none;font-size:13px;color:#16a34a;font-weight:700;margin:8px 0 0;text-align:center">✓ コピーしました。次に②を押してください</div>
+      <a class="fw-btn" href="https://docs.google.com/forms/d/e/1FAIpQLSd6kqziml5zOzBN_U94ch1JqKDFtdAkttWenpQnUlXZwIRUXA/viewform" target="_blank" rel="noopener" style="margin-top:12px;text-align:center;text-decoration:none;box-sizing:border-box">② 予備フォームを開く（Googleフォーム）</a>
+      <details style="margin-top:14px">
+        <summary style="cursor:pointer;font-size:12px;color:#888">コピーがうまくいかない場合（データを表示）</summary>
+        <div style="font-size:12px;color:#888;margin:8px 0">下の枠の中を長押し（パソコンはクリック）してすべて選択し、コピーしてください。</div>
+        <textarea id="backup-data" class="fw-textarea" style="font-size:11px;min-height:140px;font-family:monospace" readonly onclick="this.select()"></textarea>
+      </details>
+    </div>
   </div>
 </div>
 </div>
@@ -803,21 +812,33 @@ function buildPayload(){
 }
 
 async function submitData(){
-  const payload=buildPayload();
-  const json=JSON.stringify(payload,null,2);
+  let json='';
   try{
-    await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
-    // no-corsでは送信結果を確認できないため、成功時もバックアップのコピー導線を残す
+    const payload=buildPayload();
+    json=JSON.stringify(payload,null,2);
     $('backup-data').value=json;
-    $('done-backup').style.display='block';
+    await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+    // no-corsでは送信結果を読み取れないため、全員に予備手段（送信できていなかった場合）を表示する
   }catch(e){
+    // 通信エラーなど、送信が明らかに失敗した場合
+    if(!json){ try{ json=JSON.stringify(exp,null,2); }catch(_){ json=String(e); } $('backup-data').value=json; }
     $('done-err').style.display='block';
-    $('fallback-data').value=json;
   }
+  $('done-backup').style.display='block';
   show('s-done');
 }
-function copyFallback(){$('fallback-data').select();document.execCommand('copy');alert('コピーしました。');}
-function copyBackup(){$('backup-data').select();document.execCommand('copy');alert('コピーしました。');}
+async function copyData(){
+  const text=$('backup-data').value;
+  let ok=false;
+  try{ await navigator.clipboard.writeText(text); ok=true; }catch(_){}
+  if(!ok){
+    const ta=$('backup-data'); ta.closest('details').open=true;
+    ta.focus(); ta.select(); ta.setSelectionRange(0,text.length);
+    try{ ok=document.execCommand('copy'); }catch(_){}
+  }
+  if(ok){ $('copy-msg').style.display='block'; }
+  else{ alert('自動でコピーできませんでした。表示された枠の中をすべて選択してコピーしてください。'); }
+}
 
 // ── UI描画・イベント ──
 function renderUI(){$('ui-area').innerHTML=curKey()==='good'?renderGood():renderBad();}
