@@ -163,7 +163,7 @@ body{font-family:"Yu Gothic UI","游ゴシック UI","游ゴシック",YuGothic,
       ・2つのページでそれぞれ <strong>5つのタスク</strong> を行います<br>
       ・タスクごとに所要時間を <strong>自動で記録</strong> します<br>
       ・各ページの操作後に <strong>アンケート</strong> があります<br>
-      ・収集するのは操作データのみです。氏名などの個人情報は収集しません
+      ・収集するのは、操作データとアンケートの回答、イニシャル・年齢・性別です。氏名・学籍番号・連絡先は収集しません
     </div>
   </div>
   <div class="fw-card">
@@ -490,7 +490,7 @@ const FREE_TEMPLATES = [
 // ── 状態管理 ──
 let exp = {
   group:null, uiOrder:[], uiIdx:0, taskIdx:0,
-  startTime:null,
+  startTime:null, accumMs:0,   // accumMs: 説明に戻る前までに経過した時間（同じタスク内で合計する）
   info:{initial:'',age:0,gender:'',ts_start:''},
   result:{
     good_ui:{tasks:{},sus_raw:[],sus_score:null,free_reason:''},
@@ -546,6 +546,7 @@ function startExp(){
 }
 
 function showPre(){
+  exp.accumMs=0; // 新しいタスクに入るので、合計時間をリセット
   const t=TASKS[exp.taskIdx];
   const isBad = curKey()==='bad';
   const instruction = (isBad&&t.instruction_bad) ? t.instruction_bad : t.instruction;
@@ -604,8 +605,12 @@ function startTask(){
   show('s-ui');
 }
 
+// このタスクの所要時間（説明に戻る前の時間も合計する）
+function elapsedMs(){return Math.round(exp.accumMs+(performance.now()-exp.startTime));}
+
 function backToPreTask(){
-  if(confirmCount>0 && !confirm('説明に戻ると、このタスクは最初からやり直しになります。\nよろしいですか？')) return;
+  if(confirmCount>0 && !confirm('説明に戻ると、このタスクの操作は最初からやり直しになります。\nよろしいですか？')) return;
+  exp.accumMs+=performance.now()-exp.startTime; // ここまでの時間を合計に足す
   confirmCount=0;
   show('s-pre');
 }
@@ -624,7 +629,7 @@ function submitAnswer(){
     if(!r){alert('選択してください');return;}
     answer=r.value;
   }
-  const elapsed=Math.round(performance.now()-exp.startTime);
+  const elapsed=elapsedMs();
   const correct=checkAnswer(t.id,answer);
   curData().tasks[t.id]={time_ms:elapsed,completed:true,answer,correct,timeout:false,memo:''};
   showPostTask();
@@ -650,7 +655,7 @@ function checkConfirmAuto(){
       alert(msg);
       return;
     }
-    const elapsed=Math.round(performance.now()-exp.startTime);
+    const elapsed=elapsedMs();
     curData().tasks[t.id]={time_ms:elapsed,completed:true,timeout:false,memo:''};
     flashComplete();
     setTimeout(showPostTask,700);
@@ -681,7 +686,7 @@ function checkConfirmAuto(){
         alert(`⚠️ 2回目は「Plus」クラスで確認画面まで進んでください。\n\n${backBtnLabel()}から前の画面に戻って修正してください。`);
         return;
       }
-      const elapsed=Math.round(performance.now()-exp.startTime);
+      const elapsed=elapsedMs();
       curData().tasks[t.id]={time_ms:elapsed,completed:true,timeout:false,memo:''};
       flashComplete();
       setTimeout(showPostTask,700);
@@ -747,7 +752,7 @@ function submitSUS(){
   if(!ok){alert('すべての項目を評価してください');return;}
   let total=0;
   raw.forEach((v,i)=>{total+=i%2===0?v-1:5-v;});
-  curData().sus_raw=raw; curData().sus_score=Math.round(total*2.5);
+  curData().sus_raw=raw; curData().sus_score=total*2.5; // SUSは2.5刻み（丸めない）
   // s-free画面を構築してから表示
   const freeTemplates=FREE_TEMPLATES;
   $('free-checks').innerHTML=freeTemplates.map(t=>`<label class="pill"><input type="checkbox" value="${t}"> ${t}</label>`).join('');
@@ -817,7 +822,13 @@ async function submitData(){
     const payload=buildPayload();
     json=JSON.stringify(payload,null,2);
     $('backup-data').value=json;
-    await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+    // 30秒たっても通信が終わらない場合は打ち切り、送信失敗として扱う
+    // （受信側は混雑時に最大30秒待つため、それより短くしない）
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(),30000);
+    try{
+      await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload),signal:ctrl.signal});
+    }finally{ clearTimeout(timer); }
     // no-corsでは送信結果を読み取れないため、全員に予備手段（送信できていなかった場合）を表示する
   }catch(e){
     // 通信エラーなど、送信が明らかに失敗した場合
